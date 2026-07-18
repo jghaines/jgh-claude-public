@@ -12,9 +12,9 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f7;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
             line-height: 1.6;
             padding: 16px;
         }
@@ -24,155 +24,135 @@
             margin: 0 auto;
         }
 
-        header {
+        .header {
             text-align: center;
             margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e0e0e0;
+            padding-top: 8px;
         }
 
-        .date {
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header p {
             font-size: 14px;
             color: #666;
-            margin-top: 4px;
         }
 
-        h1 {
-            font-size: 28px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .card {
+        .section {
             background: white;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .card h2 {
+        .section h2 {
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             color: #1d1d1f;
-            border-left: 4px solid #007AFF;
-            padding-left: 12px;
+            border-bottom: 2px solid #f5f5f7;
+            padding-bottom: 8px;
         }
 
-        .news-item {
+        .item {
             margin-bottom: 16px;
             padding-bottom: 16px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .news-item:last-child {
+        .item:last-child {
             margin-bottom: 0;
             padding-bottom: 0;
             border-bottom: none;
         }
 
-        .news-item h3 {
-            font-size: 15px;
+        .item-title {
             font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 15px;
+            margin-bottom: 4px;
             color: #1d1d1f;
         }
 
-        .news-item p {
+        .item-description {
             font-size: 14px;
             color: #555;
             line-height: 1.5;
         }
 
-        .timestamp {
+        .item-time {
             font-size: 12px;
             color: #999;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
-        footer {
+        .timestamp {
             text-align: center;
             font-size: 12px;
             color: #999;
-            margin-top: 32px;
+            margin-top: 24px;
             padding-top: 16px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .empty-state {
+            color: #999;
+            font-size: 14px;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📱 Morning Brief</h1>
-            <div class="date">Friday, July 18, 2026</div>
-        </header>
+        <div class="header">
+            <h1>Good Morning</h1>
+            <p>Friday, July 18, 2026</p>
+        </div>
 
-        <div class="card">
-            <h2>🍎 Apple News</h2>
-
-            <div class="news-item">
-                <h3>iOS 27 Developer Event</h3>
-                <p>Apple hosting an online developer session on July 23 to showcase Siri AI features, Liquid Glass, and other iOS 27 innovations for app developers.</p>
-                <div class="timestamp">Upcoming event</div>
+        <div class="section">
+            <h2>Fastmail Summary</h2>
+            <div class="item">
+                <div class="item-title">GitHub Account Alert</div>
+                <div class="item-description">A fine-grained personal access token "Claude Scheduled Tasks on Air-Server" was added to your account.</div>
+                <div class="item-time">Jul 18, 05:23 AM</div>
             </div>
-
-            <div class="news-item">
-                <h3>Broadcom Partnership Extended</h3>
-                <p>Apple commits to six-year deal with Broadcom to design and produce custom silicon components and wireless connectivity technologies, boosting U.S. chip production.</p>
-                <div class="timestamp">Recent announcement</div>
-            </div>
-
-            <div class="news-item">
-                <h3>Q3 2026 Earnings Report</h3>
-                <p>Apple will announce fiscal Q3 2026 results on Thursday, July 30 at 2:00 p.m. PT with CEO Tim Cook and CFO Kevan Parekh participating.</p>
-                <div class="timestamp">Scheduled for July 30</div>
-            </div>
-
-            <div class="news-item">
-                <h3>iOS 27 Beta Released</h3>
-                <p>First public betas of iOS 27, iPadOS 27, macOS 27 Golden Gate, watchOS 27, visionOS 27, and tvOS 27 now available. iOS 27 removes Mac/PC connection requirement for recovery mode.</p>
-                <div class="timestamp">Recent release</div>
+            <div class="item">
+                <div class="item-title">IMDB Sign-in Notification</div>
+                <div class="item-description">Sign-in detected from macOS browser in South Australia. Jul 18, 02:13 PM ACST</div>
+                <div class="item-time">Jul 18, 04:43 AM</div>
             </div>
         </div>
 
-        <div class="card">
-            <h2>🤖 AI News</h2>
-
-            <div class="news-item">
-                <h3>New AI Model Releases</h3>
-                <p>Anthropic launched Claude Sonnet 5, Google released Gemini Nano Banana 2 Lite, and OpenAI launched GPT-5.6 family (Luna, Terra, Sol) with 1M token context window and $1-5/MTok pricing.</p>
-                <div class="timestamp">Early July 2026</div>
+        <div class="section">
+            <h2>Apple Company Info</h2>
+            <div class="item">
+                <div class="item-title">Apple Intelligence Approved in China</div>
+                <div class="item-description">China's Cyberspace Administration approved Apple's AI services with integration of Alibaba's Qwen AI model and Baidu partnership across iOS, iPadOS, macOS, and visionOS.</div>
+                <div class="item-time">Jul 16, 2026</div>
             </div>
-
-            <div class="news-item">
-                <h3>Healthcare AI Breakthrough</h3>
-                <p>AI systems now detecting life-threatening conditions like brain hemorrhages in seconds by analyzing CT imaging in real time, alerting clinical teams instantly before physician visual identification.</p>
-                <div class="timestamp">Recent advancement</div>
+            <div class="item">
+                <div class="item-title">Broadcom Partnership Extended</div>
+                <div class="item-description">Apple announced a new six-year commitment with Broadcom to design and produce custom silicon components and advanced wireless connectivity technologies.</div>
+                <div class="item-time">Recent</div>
             </div>
-
-            <div class="news-item">
-                <h3>Publishing Industry Lawsuit</h3>
-                <p>Major publishers (Hachette, Cengage, Elsevier) and author Scott Turow filed class action against Google, alleging copyrighted books were used to train Gemini AI without permission.</p>
-                <div class="timestamp">Recent legal action</div>
+            <div class="item">
+                <div class="item-title">Q3 2026 Earnings Coming</div>
+                <div class="item-description">Apple will report Q3 2026 financial results on July 30. Expected revenue growth of 14-17% YoY, potentially reaching $110 billion.</div>
+                <div class="item-time">Jul 30, 2026</div>
             </div>
-
-            <div class="news-item">
-                <h3>AI Environmental Impact</h3>
-                <p>Google's latest report shows rapid AI infrastructure growth drove record consumption: electricity up 37%, greenhouse gas emissions up 18%, water use up 34%.</p>
-                <div class="timestamp">Recent report</div>
-            </div>
-
-            <div class="news-item">
-                <h3>Enterprise AI Investment</h3>
-                <p>Microsoft announced $2.5B AI integration initiative while AWS investing $1B to embed AI engineers directly into customer teams.</p>
-                <div class="timestamp">Recent announcements</div>
+            <div class="item">
+                <div class="item-title">iPad Mini Getting OLED Overhaul</div>
+                <div class="item-description">Apple is preparing the biggest iPad mini update in five years, featuring an OLED screen for the first time. New iPad Air and base iPad models expected in 2027.</div>
+                <div class="item-time">Jul 16, 2026</div>
             </div>
         </div>
 
-        <footer>
-            Generated on July 18, 2026 • Morning Digest
-        </footer>
+        <div class="timestamp">
+            Generated at 05:30 UTC on July 18, 2026
+        </div>
     </div>
 </body>
-</html><!-- rebuild trigger Sat Jul 18 05:28:14 UTC 2026 -->
+</html>

@@ -28,6 +28,59 @@
             text-align: center;
             margin-bottom: 24px;
             padding-top: 8px;
+            position: relative;
+        }
+
+        .battery-indicator {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #666;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .battery-icon {
+            display: inline-flex;
+            align-items: center;
+            width: 28px;
+            height: 16px;
+            border: 1.5px solid #666;
+            border-radius: 2px;
+            padding: 1px;
+            position: relative;
+        }
+
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 8px;
+            background: #666;
+        }
+
+        .battery-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #34c759 0%, #34c759 100%);
+            border-radius: 1px;
+            transition: background 0.3s ease;
+        }
+
+        .battery-fill.low {
+            background: #ff3b30;
+        }
+
+        .battery-fill.medium {
+            background: #ff9500;
         }
 
         .header h1 {
@@ -39,6 +92,12 @@
         .header p {
             font-size: 14px;
             color: #666;
+        }
+
+        .timestamp {
+            font-size: 13px;
+            color: #999;
+            margin-top: 8px;
         }
 
         .section {
@@ -89,7 +148,7 @@
             margin-top: 6px;
         }
 
-        .timestamp {
+        .footer {
             text-align: center;
             font-size: 12px;
             color: #999;
@@ -108,8 +167,15 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="battery-indicator">
+                <div class="battery-icon">
+                    <div class="battery-fill" id="batteryFill" style="width: 85%;"></div>
+                </div>
+                <span id="batteryText">85%</span>
+            </div>
             <h1>Good Morning</h1>
             <p>Friday, July 18, 2026</p>
+            <div class="timestamp">Generated at 05:30 UTC</div>
         </div>
 
         <div class="section">
@@ -150,9 +216,25 @@
             </div>
         </div>
 
-        <div class="timestamp">
-            Generated at 05:30 UTC on July 18, 2026
+        <div class="footer">
+            Morning digest ready on your iPhone
         </div>
     </div>
+
+    <script>
+        // Update battery indicator color based on level
+        function updateBatteryColor(level) {
+            const fill = document.getElementById('batteryFill');
+            fill.classList.remove('low', 'medium');
+            if (level <= 20) {
+                fill.classList.add('low');
+            } else if (level <= 50) {
+                fill.classList.add('medium');
+            }
+        }
+
+        // Initialize battery color on page load
+        updateBatteryColor(85);
+    </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Morning Digest — July 20, 2026</title>
+    <title>Morning Digest - July 21, 2026</title>
     <style>
         * {
             margin: 0;
@@ -12,10 +12,10 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f7;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             padding: 16px;
-            line-height: 1.6;
+            min-height: 100vh;
             color: #333;
         }
 
@@ -27,19 +27,20 @@
         .header {
             text-align: center;
             margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #e5e5ea;
+            padding-top: 8px;
         }
 
         .header h1 {
             font-size: 28px;
             font-weight: 700;
+            color: #1a1a1a;
             margin-bottom: 4px;
         }
 
         .header p {
             font-size: 14px;
             color: #666;
+            font-weight: 500;
         }
 
         .card {
@@ -47,115 +48,188 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #007AFF;
         }
 
-        .card h2 {
+        .card.fastmail {
+            border-left-color: #FF9500;
+        }
+
+        .card.ai {
+            border-left-color: #5856D6;
+        }
+
+        .card.centralian {
+            border-left-color: #FF3B30;
+        }
+
+        .card.apple {
+            border-left-color: #000;
+        }
+
+        .card-title {
             font-size: 18px;
             font-weight: 600;
             margin-bottom: 12px;
-            color: #1d1d1f;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .card-section {
-            margin-bottom: 12px;
+        .card-title-icon {
+            font-size: 20px;
         }
 
-        .card-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
+        .card-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
         }
 
         .item {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .item-title {
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .item-desc {
             font-size: 14px;
-            margin-bottom: 8px;
-            padding-left: 12px;
-            border-left: 3px solid #0071e3;
+            color: #666;
+            line-height: 1.5;
         }
 
         .timestamp {
             font-size: 12px;
             color: #999;
-            margin-top: 4px;
+            margin-top: 16px;
+            text-align: center;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
         }
 
         .badge {
             display: inline-block;
-            background-color: #f5f5f7;
-            color: #555;
-            padding: 4px 8px;
+            background: #f0f0f0;
+            padding: 2px 8px;
             border-radius: 4px;
             font-size: 12px;
-            margin-top: 8px;
-        }
-
-        .highlight {
-            font-weight: 500;
-            color: #0071e3;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 2px solid #e5e5ea;
-            font-size: 12px;
-            color: #999;
+            color: #666;
+            margin-left: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Morning Digest</h1>
-            <p>Sunday, July 20, 2026</p>
+            <h1>📱 Morning Digest</h1>
+            <p>July 21, 2026</p>
         </div>
 
-        <div class="card">
-            <h2>📧 Fastmail Summary</h2>
-            <div class="card-section">
-                <p><strong>3 unread messages</strong> in Subscriptions folder</p>
-                <p style="font-size: 13px; color: #666; margin-top: 8px;">Patreon subscription offer, LinkedIn job alert, and Accesspay service update. No urgent action items.</p>
+        <!-- Fastmail Summary -->
+        <div class="card fastmail">
+            <div class="card-title">
+                <span class="card-title-icon">📧</span>
+                Inbox Summary
             </div>
-        </div>
-
-        <div class="card">
-            <h2>🍎 Apple Company Info</h2>
-            <div class="card-section">
+            <div class="card-content">
+                <p style="margin-bottom: 12px;">You have <strong>10 unread messages</strong> since yesterday, with several important categories:</p>
                 <div class="item">
-                    <strong>Q3 2026 Earnings Announcement</strong>
-                    <p style="font-size: 13px; color: #666; margin-top: 4px;">Apple will report Q3 2026 results on <span class="highlight">July 30</span>, with conference call at 5 p.m. EDT. Tim Cook and CFO Kevan Parekh will discuss the financials.</p>
-                    <div class="badge">Upcoming</div>
+                    <div class="item-title">AI & Tech News</div>
+                    <div class="item-desc">Multiple subscriptions with updates on AI developments</div>
                 </div>
-            </div>
-            <div class="card-section">
                 <div class="item">
-                    <strong>Leadership Transition</strong>
-                    <p style="font-size: 13px; color: #666; margin-top: 4px;">John Ternus will become Apple's next CEO as Tim Cook steps down. The July 30 earnings call may be Cook's final earnings presentation in his CEO role.</p>
+                    <div class="item-title">AWS Updates</div>
+                    <div class="item-desc">Free Tier usage alerts and re:Action newsletter</div>
                 </div>
-            </div>
-            <div class="card-section">
                 <div class="item">
-                    <strong>Broadcom Partnership Expansion</strong>
-                    <p style="font-size: 13px; color: #666; margin-top: 4px;">Apple announced a new six-year commitment with Broadcom to design and produce custom silicon components and cutting-edge wireless connectivity technologies.</p>
-                </div>
-            </div>
-            <div class="card-section">
-                <div class="item">
-                    <strong>Product Pipeline</strong>
-                    <p style="font-size: 13px; color: #666; margin-top: 4px;">Apple has at least 16 new products planned for the rest of 2026, including an M6 chip update for the 14-inch MacBook Pro base model.</p>
+                    <div class="item-title">Professional Updates</div>
+                    <div class="item-desc">Scrum Alliance board member announcements</div>
                 </div>
             </div>
         </div>
 
-        <div class="footer">
-            <p>Generated on July 20, 2026 at 00:00 UTC</p>
+        <!-- AI News -->
+        <div class="card ai">
+            <div class="card-title">
+                <span class="card-title-icon">🤖</span>
+                AI & Tech News
+            </div>
+            <div class="card-content">
+                <div class="item">
+                    <div class="item-title">Import AI #465: Open vs Closed Gaps</div>
+                    <div class="item-desc">Analysis of Kimi K3 and Demis Hassabis's policy plans shaping the AI landscape</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">AWS re:Action Newsletter</div>
+                    <div class="item-desc">AI gets moving as robots rise, with job market shifts and data center cooling innovations</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">Evolving AI Insights</div>
+                    <div class="item-desc">Analysis of China's advancement in AI capabilities</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Centralian News -->
+        <div class="card centralian">
+            <div class="card-title">
+                <span class="card-title-icon">🇨🇭</span>
+                Swiss News
+            </div>
+            <div class="card-content">
+                <div class="item">
+                    <div class="item-title">Schweizer Revue Newsletter</div>
+                    <div class="item-desc">Featured: Switzerland decides on a population cap, agriculture today, digital voting, and life at the edge</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apple Company Info -->
+        <div class="card apple">
+            <div class="card-title">
+                <span class="card-title-icon">🍎</span>
+                Apple News
+            </div>
+            <div class="card-content">
+                <div class="item">
+                    <div class="item-title">Q3 2026 Earnings Release</div>
+                    <div class="item-desc">Financial results announced July 30 at 2:00 PM PT. This will be Tim Cook's last earnings call as CEO.</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">iPhone 17 Launch</div>
+                    <div class="item-desc">New lineup with storage up to 2TB, enhanced pro segmentation, and mobile media creation focus for creators and small teams</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">Apple Intelligence in China</div>
+                    <div class="item-desc">Approved by Chinese regulators with integration of Alibaba's Qwen AI and Baidu partnership for local users</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">Music Subscription Increase</div>
+                    <div class="item-desc">Apple Music prices increased in US and select markets</div>
+                </div>
+                <div class="item">
+                    <div class="item-title">Stock Performance</div>
+                    <div class="item-desc">AAPL hit new all-time closing high in recent trading</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="timestamp">
+            Generated: July 21, 2026 at 12:00 AM
         </div>
     </div>
 </body>

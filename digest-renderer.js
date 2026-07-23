@@ -20,6 +20,8 @@ class DigestRenderer extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.content = '';
+    this.icons = {};
+    this.date = '';
   }
 
   connectedCallback() {
@@ -56,16 +58,75 @@ class DigestRenderer extends HTMLElement {
    * Fetch markdown file
    */
   async fetchMarkdown(src) {
-    try {
-      const response = await fetch(src);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${src}: ${response.statusText}`);
-      }
-      return await response.text();
-    } catch (error) {
-      console.error('Error fetching digest:', error);
-      return `<p class="error">Error loading digest: ${error.message}</p>`;
+    const response = await fetch(src);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${src}: ${response.status} ${response.statusText}`);
     }
+    return await response.text();
+  }
+
+  /**
+   * Split the YAML front matter off the payload.
+   *
+   * digest.md leads with a metadata block (date, section titles and icons)
+   * that must not reach the markdown converter, or it renders as body text.
+   * Only the small subset of YAML the digest payload uses is supported:
+   * top-level `key: value` pairs plus the `sections:` list of flat objects.
+   */
+  parseFrontMatter(md) {
+    const match = md.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+    if (!match) return { meta: { sections: [] }, body: md };
+
+    const unquote = (v) => v.replace(/^["'](.*)["']$/, '$1').trim();
+    const meta = { sections: [] };
+    let section = null;
+
+    for (const line of match[1].split(/\r?\n/)) {
+      if (!line.trim()) continue;
+
+      // "  - id: foo" starts a new section
+      const item = line.match(/^\s*-\s+(\w+):\s*(.*)$/);
+      if (item) {
+        section = { [item[1]]: unquote(item[2]) };
+        meta.sections.push(section);
+        continue;
+      }
+
+      // "    title: Foo" continues the section started above
+      const nested = line.match(/^\s{2,}(\w+):\s*(.*)$/);
+      if (nested && section) {
+        section[nested[1]] = unquote(nested[2]);
+        continue;
+      }
+
+      // "date: 2026-07-24" — split on the first colon only, so ISO
+      // timestamps keep their own colons intact
+      const top = line.match(/^(\w+):\s*(.*)$/);
+      if (top) {
+        section = null;
+        if (top[2] !== '') meta[top[1]] = unquote(top[2]);
+      }
+    }
+
+    return { meta, body: md.slice(match[0].length) };
+  }
+
+  /**
+   * Format the front matter `date` as a page header, e.g.
+   * "FRIDAY, JULY 24, 2026". Falls back to the raw value if unparseable.
+   */
+  formatDate(value) {
+    if (!value) return '';
+    const date = new Date(`${value}T00:00:00`);
+    if (isNaN(date)) return value;
+    return date
+      .toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+      .toUpperCase();
   }
 
   /**
@@ -96,18 +157,25 @@ class DigestRenderer extends HTMLElement {
     // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
-    // Headers
+    // Headers. Section headings pick up the icon declared for them in the
+    // payload's front matter, matched on title.
     html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^## (.*?)$/gm, (match, title) => {
+      const icon = this.icons[title.trim()];
+      return icon
+        ? `<h2><span class="icon">${icon}</span>${title}</h2>`
+        : `<h2>${title}</h2>`;
+    });
     html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
 
     // Bold
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    html = html.replace(/(^|[^\w])__([^_]+)__(?!\w)/g, '$1<strong>$2</strong>');
 
-    // Italic
+    // Italic. Underscores only count at word boundaries, so snake_case
+    // identifiers in the payload (HOME_ASSISTANT_TOKEN) survive intact.
     html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+    html = html.replace(/(^|[^\w])_([^_]+)_(?!\w)/g, '$1<em>$2</em>');
 
     // Links
     html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
@@ -149,10 +217,24 @@ class DigestRenderer extends HTMLElement {
       return;
     }
 
-    const markdown = await this.fetchMarkdown(src);
-    const html = this.markdownToHtml(markdown);
+    let markdown;
+    try {
+      markdown = await this.fetchMarkdown(src);
+    } catch (error) {
+      console.error('Error fetching digest:', error);
+      this.displayError(`Error loading digest: ${error.message}`);
+      return;
+    }
 
-    this.content = html;
+    const { meta, body } = this.parseFrontMatter(markdown);
+
+    this.icons = {};
+    for (const section of meta.sections) {
+      if (section.title && section.icon) this.icons[section.title] = section.icon;
+    }
+
+    this.date = this.formatDate(meta.date);
+    this.content = this.markdownToHtml(body);
     this.renderContent();
   }
 
@@ -180,6 +262,11 @@ class DigestRenderer extends HTMLElement {
    * Render content
    */
   renderContent() {
+    const header = this.shadowRoot.querySelector('.date');
+    if (header) {
+      header.textContent = this.date;
+    }
+
     const container = this.shadowRoot.querySelector('.content');
     if (container) {
       container.innerHTML = this.content;
@@ -235,9 +322,25 @@ class DigestRenderer extends HTMLElement {
           padding: 2rem 1.5rem;
         }
 
+        .date {
+          font-size: 0.875rem;
+          letter-spacing: 0.05em;
+          color: var(--text-muted);
+          text-align: center;
+          margin-bottom: 1.5rem;
+        }
+
+        .date:empty {
+          display: none;
+        }
+
         .content {
           line-height: 1.7;
           font-size: 16px;
+        }
+
+        .content .icon {
+          margin-right: 0.5rem;
         }
 
         .content > p {
@@ -375,6 +478,7 @@ class DigestRenderer extends HTMLElement {
       </style>
 
       <div class="container">
+        <div class="date"></div>
         <div class="content">
           <p class="loading">Loading digest...</p>
         </div>

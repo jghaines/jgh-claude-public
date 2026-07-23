@@ -1,3 +1,4 @@
 # Local task state - not repo content
 scripts/.steam_cache.json
 .DS_Store
+scripts/__pycache__/

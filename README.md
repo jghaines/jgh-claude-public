@@ -20,7 +20,7 @@ This is a complete HTML/CSS/JavaScript solution (no build tools, no dependencies
 - **digest-theme.js** — Theme manager web component (480 lines)
 - **digest-renderer.js** — Markdown to HTML renderer (400 lines)
 - **digest-styles.css** — Global styles with CSS variables
-- **digest.md** — Sample markdown content
+- **digest.md** — Daily content payload, auto-generated and overwritten every morning by a scheduled task (see AGENTS.md) — don't hand-edit, changes won't survive the next run
 
 ### Documentation
 - **README.md** — This file
@@ -128,7 +128,9 @@ html.dark {
 ## Customization
 
 ### Change digest content
-Edit `digest.md`:
+Don't hand-edit `digest.md` directly — it's regenerated every morning by a scheduled task (see AGENTS.md) and your edits won't survive the next run. To change what goes into it, edit `prompts/daily.md` (or `prompts/weekly.md` for `digest-weekly.md`) instead.
+
+For local testing, you can still point `digest-renderer` at any throwaway markdown file with the same shape:
 ```markdown
 # Your Title
 

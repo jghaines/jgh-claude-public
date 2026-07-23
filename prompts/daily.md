@@ -4,22 +4,26 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 **Data sources:**
 1. **Fastmail Summary**: The Fastmail MCP connector IS connected to this account (confirmed working — do not assume it's unavailable). At the start of this task, call ToolSearch with query "fastmail" (or "select:mcp__fastmail" style queries) to load the Fastmail MCP tools, then use them to check the Inbox and Subscriptions folders for unread messages since yesterday. Only treat Fastmail as unavailable if ToolSearch genuinely returns no Fastmail tools after trying at least two query variations (e.g. "fastmail", "email inbox").
-2. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 1 to have worked)
+
+2. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 1 to have worked). Include links to centr
+
 3. **AI News**: Extract highlights from Fastmail inbox messages (requires step 1 to have worked)
-4. **Apple Company Info**: Search the web for recent news or updates
-5. **B8 Competitors & MCP Update (monthly payload)**: See "Check for monthly payload" step below — include only if a pending payload file exists.
+
+4. **Apple Company Info**: Search the web for recent news or updates. Only include important news.
+
+5. **Scheduled payload**: See step below — include only if a pending payload file exists.
 
 Only include a section in the output if it has noteworthy content. Skip empty sections entirely (omit from both frontmatter `sections` list and body).
 
-**Check for monthly payload (do this first, before generating the digest):**
-The monthly-b8-mcp-search scheduled task writes its findings to `payloads/b8-mcp-pending.md` in this repo. From the repo directory (already pulled by the bootstrap step):
+**Check for Scheduled payload (do this first, before generating the digest):**
+Less frequent scheduled tasks write their findings to `payloads/*-pending.md` in this repo. From the repo directory (already pulled by the bootstrap step):
 ```
-cat payloads/b8-mcp-pending.md 2>/dev/null
+cat payloads/*-pending.md 2>/dev/null
 ```
-If it exists and has noteworthy findings, fold its content into a `b8-mcp-update` section (see schema below). Then remove it so it isn't shown again tomorrow:
+If it exists and has noteworthy findings, fold its content into a section with the corresponding name (see schema below). Then remove it so it isn't shown again tomorrow:
 ```
-git rm payloads/b8-mcp-pending.md
-git commit -m "Consume B8/MCP payload $(date +%Y-%m-%d)"
+git rm payloads/*-pending.md
+git commit -m "Consume payloads/* $(date +%Y-%m-%d)"
 ```
 (commit this alongside the digest.md push below, in the same git session, so only one push is needed.) If the file doesn't exist, or says there were no noteworthy findings, skip this section entirely — that's the normal case for most days.
 
@@ -37,8 +41,11 @@ sections:
   - id: apple-news
     title: Apple News
     icon: "🍎"
-  - id: b8-mcp-update
-    title: B8 Competitors & MCP Update
+  - id: monthly-update
+    title: Monthly Update
+    icon: "🏢"
+  - id: weekly-update
+    title: Weekly Update
     icon: "🏢"
   (only list sections that actually have content below, in the order they appear in the body)
 ---

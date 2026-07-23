@@ -1,9 +1,11 @@
-# Monthly B8/MCP Search
+# Monthly Digest
 
 Search the web for recent developments and generate a monthly findings report. Include only highlights/noteworthy findings.
 
 **Search topics:**
+
 1. **B8 Competitors in Australia**: Search for news and updates about B8 competitors operating in Australia (e.g., new funding, product launches, market moves, partnerships)
+
 2. **New MCPs**: Search for:
    - New Facebook MCP or updates to existing Facebook integrations
    - Other new MCPs relevant to Claude workflows and automation
@@ -26,20 +28,19 @@ Write the findings as a single Markdown file with this structure:
 - finding 2 ...
 (omit this subsection entirely if nothing noteworthy)
 ```
-If there is nothing noteworthy in either topic this month, write the file containing only a header line: `## B8 Competitors & MCP Update — <today's date>\n\n_No noteworthy findings this month._`
+
+If there is nothing noteworthy in this period, delete the payload file.
 
 **Publish the payload via git:**
 In the repo directory (already pulled by the bootstrap step):
 ```
 mkdir -p payloads
 # write the markdown content above to payloads/b8-mcp-pending.md, OVERWRITING any existing file
-git add payloads/b8-mcp-pending.md
-git commit -m "Monthly B8/MCP findings $(date +%Y-%m-%d)"
+git add payloads/monthly.md
+git commit -m "Monthly payload $(date +%Y-%m-%d)"
 git push origin HEAD:main
 ```
 
-Note: `payloads/b8-mcp-pending.md` is a queue of exactly one pending item — this task always overwrites it. The daily-morning-digest task is responsible for consuming (reading, folding into a digest, then deleting) this file, so if it's still present when this task runs again next month, it means the daily task hasn't picked it up yet; overwriting with the newest findings is still the correct behavior.
+Note: `payloads/monthly-pending.md` is a queue of exactly one pending item — this task always overwrites it. The daily-morning-digest task is responsible for consuming (reading, folding into a digest, then deleting) this file, so if it's still present when this task runs again next month, it means the daily task hasn't picked it up yet; overwriting with the newest findings is still the correct behavior.
 
 **Run summary must state:** which topics had noteworthy findings, if any.
-
-Also save the markdown file to the outputs folder for local reference.

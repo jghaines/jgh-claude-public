@@ -24,7 +24,7 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 Only include a section in the output if it has noteworthy content, EXCEPT the `battery` section from step 6, which is always included — it reports its own status (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing. Skip other empty sections entirely (omit from both frontmatter `sections` list and body).
 
 **Check for one-time task files (do this FIRST, before anything else — highest priority):**
-Scan the repo's `prompts/` folder (host path `/Users/jasonhaines/Developer/github.com/jghaines/jgh-claude-public/prompts/`) for files matching the pattern `prompts/<yyyy-mmm-dd>.md` — a 4-digit year, a 3-letter lowercase month abbreviation, and a 2-digit day, e.g. `prompts/2026-jul-23.md`. These are ad hoc, one-time task instructions the user wrote for a specific date — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted.
+Scan the repo's `prompts/` folder (host path `/Users/jasonhaines/Developer/github.com/jghaines/jgh-claude-public/prompts/`) for files matching the pattern `prompts/<yyyy-mm-dd>.md` — plain numeric ISO date, e.g. `prompts/2026-07-23.md` (same date format used everywhere else in this repo, e.g. `digest.md`'s `date:` field). These are ad hoc, one-time task instructions the user wrote for a specific date — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted.
 
 A matching file should be picked up if its date is today OR any earlier date — if this task didn't run on the exact day (task disabled, error, etc.), pick it up on the very next run regardless of how many days late. Ignore any dated file whose date is in the future. There may be more than one matching file at once; handle all of them.
 
@@ -132,6 +132,6 @@ The raw payload will be reachable at: https://jghaines.github.io/jgh-claude-publ
 Do NOT generate or publish any digest.html — that is not this task's responsibility. Do not attempt to verify the public URL by fetching it from inside the sandbox — github.io is not on the sandbox's domain allowlist, so that fetch will always fail even though the URL works fine from the user's phone/browser. This is expected; do not treat it as an upload failure.
 
 **Run summary must state:**
-(a) whether any one-time task files (`prompts/<yyyy-mmm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) which sections were included in today's payload.
+(a) whether any one-time task files (`prompts/<yyyy-mm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) which sections were included in today's payload.
 
 Save the generated digest.md to the outputs folder as well for local reference.

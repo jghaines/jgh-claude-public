@@ -13,9 +13,15 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 5. **Apple Company Info**: Search the web for recent news or updates. Only include important news.
 
-6. **Scheduled payload**: See step below — include only if a pending payload file exists.
+6. **Home Assistant Battery Status**: From the repo directory (already pulled by the bootstrap step), run:
+   ```
+   python3 scripts/ha_battery_status.py --markdown --threshold 20
+   ```
+   This reads `HOME_ASSISTANT_URL` and `HOME_ASSISTANT_TOKEN` from the scheduled task's environment (see AGENTS.md — not stored in this repo). It prints a ready-to-paste `### Battery Levels` block. Exit code `0` means it reached Home Assistant (`ok` or `empty`); exit code `1` means unreachable — that's expected until Tailscale is set up between the sandbox and the home network, not a task failure. Paste its stdout as the body of a `battery` section (id `battery`, title `Battery Status`, icon `🔋`) and set `ha_status` in the frontmatter to `ok`, `empty`, or `unreachable` to match.
 
-Only include a section in the output if it has noteworthy content. Skip empty sections entirely (omit from both frontmatter `sections` list and body).
+7. **Scheduled payload**: See step below — include only if a pending payload file exists.
+
+Only include a section in the output if it has noteworthy content, EXCEPT the `battery` section from step 6, which is always included — it reports its own status (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing. Skip other empty sections entirely (omit from both frontmatter `sections` list and body).
 
 **Check for one-time task files (do this FIRST, before anything else — highest priority):**
 Scan the repo's `prompts/` folder (host path `/Users/jasonhaines/Developer/github.com/jghaines/jgh-claude-public/prompts/`) for files matching the pattern `prompts/<yyyy-mmm-dd>.md` — a 4-digit year, a 3-letter lowercase month abbreviation, and a 2-digit day, e.g. `prompts/2026-jul-23.md`. These are ad hoc, one-time task instructions the user wrote for a specific date — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted.
@@ -52,6 +58,7 @@ date: <YYYY-MM-DD>
 generated_at: <ISO 8601 timestamp, local timezone offset>
 fastmail_status: ok | empty | skipped
 fastmail_note: "<short explanation if empty or skipped, else empty string>"
+ha_status: ok | empty | unreachable
 sections:
   - id: one-time-tasks
     title: One-Time Task
@@ -68,7 +75,10 @@ sections:
   - id: weekly-update
     title: Weekly Update
     icon: "🏢"
-  (only list sections that actually have content below, in the order they appear in the body — one-time-tasks always goes first when present)
+  - id: battery
+    title: Battery Status
+    icon: "🔋"
+  (only list sections that actually have content below, in the order they appear in the body — one-time-tasks always goes first when present; battery always goes last and is always listed, even when ha_status is empty or unreachable)
 ---
 
 ## One-Time Task
@@ -96,8 +106,15 @@ sections:
 *<timestamp>*
 
 <summary>
+
+## Battery Status
+
+### Battery Levels
+*<timestamp>*
+
+<stdout from `scripts/ha_battery_status.py --markdown`, pasted verbatim — a bullet list of device: percentage, or the unreachable/empty message it generates itself>
 ```
-Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, followed by an italic timestamp line, then a short prose summary (with markdown links to sources where relevant). Keep summaries tight — 1-3 sentences, no bullet lists needed.
+Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, followed by an italic timestamp line, then a short prose summary (with markdown links to sources where relevant). Keep summaries tight — 1-3 sentences, no bullet lists needed. The `battery` section is the one exception where the body is pasted verbatim from the script's own markdown output rather than written by you.
 
 Choose section ids/titles/icons freely based on what content you actually gathered that day (e.g. don't force "Apple News" if there's nothing noteworthy — just omit it). The ids above are just the recurring ones; keep them consistent day to day so the front-end can rely on stable ids for known categories.
 
@@ -115,6 +132,6 @@ The raw payload will be reachable at: https://jghaines.github.io/jgh-claude-publ
 Do NOT generate or publish any digest.html — that is not this task's responsibility. Do not attempt to verify the public URL by fetching it from inside the sandbox — github.io is not on the sandbox's domain allowlist, so that fetch will always fail even though the URL works fine from the user's phone/browser. This is expected; do not treat it as an upload failure.
 
 **Run summary must state:**
-(a) whether any one-time task files (`prompts/<yyyy-mmm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) which sections were included in today's payload.
+(a) whether any one-time task files (`prompts/<yyyy-mmm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) which sections were included in today's payload.
 
 Save the generated digest.md to the outputs folder as well for local reference.

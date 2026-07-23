@@ -50,6 +50,7 @@ date: 2026-07-22
 generated_at: 2026-07-22T05:48:00+09:30
 fastmail_status: ok | empty | skipped
 fastmail_note: ""
+ha_status: ok | empty | unreachable
 sections:
   - id: ai-news
     title: AI News
@@ -65,6 +66,21 @@ sections:
 ```
 
 Section `id`s should stay consistent day to day (e.g. always `ai-news`, `apple-news`) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day.
+
+## Data source scripts (`scripts/`)
+
+Stdlib-only Python helpers that scheduled tasks shell out to, instead of the agent doing the fetch/parse itself inline. Keeping these as scripts (not inline instructions) means the logic is testable and diffable, and the sandbox never needs a `pip install` step.
+
+- `scripts/steam_machine_check.py` — run by `weekly-digest-recap`, writes to `payloads/steam-machine-pending.md`.
+- `scripts/ha_battery_status.py` — run directly by `daily-morning-digest` (see `prompts/daily.md`). Queries the Home Assistant REST API (`/api/states`) for battery-class sensors and prints either JSON or a digest-ready markdown block (`--markdown`).
+
+### Home Assistant connectivity
+
+Home Assistant lives at `http://homeassistant.local:8123` on the home LAN only. The scheduled task runs in Anthropic's cloud sandbox, which is **not** on that network — `ha_battery_status.py` will fail to resolve the hostname and report `ha_status: unreachable` every day until Tailscale (or an equivalent tunnel) is set up between the sandbox and the home network. This is a known TODO, not a bug; the daily task is written to degrade gracefully (see `prompts/daily.md` step 6) rather than fail when this happens.
+
+Once Tailscale is set up, the scheduled task's environment needs two variables added to its config (same treatment as the GitHub PAT above — never commit these to the repo):
+- `HOME_ASSISTANT_URL` — defaults to `http://homeassistant.local:8123` if unset, but should be set to whatever address is reachable over Tailscale (e.g. the Tailscale MagicDNS name or a `100.x.x.x` IP).
+- `HOME_ASSISTANT_TOKEN` — a Home Assistant long-lived access token (Profile → Security → Long-Lived Access Tokens).
 
 ## The payload queue (`payloads/b8-mcp-pending.md`)
 

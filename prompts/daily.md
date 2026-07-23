@@ -13,11 +13,7 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 5. **Apple Company Info**: Search the web for recent news or updates. Only include important news.
 
-6. **Home Assistant Battery Status**: From the repo directory (already pulled by the bootstrap step), run:
-   ```
-   python3 scripts/ha_battery_status.py --markdown --threshold 20
-   ```
-   This reads `HOME_ASSISTANT_URL` and `HOME_ASSISTANT_TOKEN` from the scheduled task's environment (see AGENTS.md — not stored in this repo). It prints a ready-to-paste `### Battery Levels` block. Exit code `0` means it reached Home Assistant (`ok` or `empty`); exit code `1` means unreachable — that's expected until Tailscale is set up between the sandbox and the home network, not a task failure. Paste its stdout as the body of a `battery` section (id `battery`, title `Battery Status`, icon `🔋`) and set `ha_status` in the frontmatter to `ok`, `empty`, or `unreachable` to match.
+6. **Home Assistant Battery Status**: Use the Home Assistant MCP connector directly (do NOT use `scripts/ha_battery_status.py` or `HOME_ASSISTANT_TOKEN`/Tailscale — that script is deprecated/legacy, kept only for local reference, no longer wired into this task). Call `mcp__Home_Assistant__GetLiveContext` with `name: "Battery Level"` to fetch the house battery sensor (confirmed working — e.g. returns `state: '60.4'`, `unit_of_measurement: '%'`). If the tool call succeeds and returns a sensor reading, set `ha_status: ok` and render a `### Battery Levels` item listing the sensor name and percentage (flag with ⚠️ low if under 20%). If the tool call errors or the connector isn't available, set `ha_status: unreachable` and note that in the body. If it returns successfully but with no matching sensor, set `ha_status: empty`. Always include the `battery` section (id `battery`, title `Battery Status`, icon `🔋`) regardless of status.
 
 7. **Scheduled payload**: See step below — include only if a pending payload file exists.
 
@@ -112,9 +108,9 @@ sections:
 ### Battery Levels
 *<timestamp>*
 
-<stdout from `scripts/ha_battery_status.py --markdown`, pasted verbatim — a bullet list of device: percentage, or the unreachable/empty message it generates itself>
+<bullet list of device: percentage from the Home Assistant MCP call (e.g. "- Battery Level: 60%"), or an unreachable/empty status message if the MCP call failed or found no sensor>
 ```
-Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, followed by an italic timestamp line, then a short prose summary (with markdown links to sources where relevant). Keep summaries tight — 1-3 sentences, no bullet lists needed. The `battery` section is the one exception where the body is pasted verbatim from the script's own markdown output rather than written by you.
+Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, followed by an italic timestamp line, then a short prose summary (with markdown links to sources where relevant). Keep summaries tight — 1-3 sentences, no bullet lists needed.
 
 Choose section ids/titles/icons freely based on what content you actually gathered that day (e.g. don't force "Apple News" if there's nothing noteworthy — just omit it). The ids above are just the recurring ones; keep them consistent day to day so the front-end can rely on stable ids for known categories.
 

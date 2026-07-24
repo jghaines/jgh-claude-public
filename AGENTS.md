@@ -21,24 +21,50 @@ Three Claude scheduled tasks drive this repo:
 | `weekly-digest-recap` | Mondays 6:00am | — | `digest-weekly.md` |
 | `monthly-b8-mcp-search` | 1st of month | — | `payloads/b8-mcp-pending.md` |
 
-Each scheduled task's actual stored prompt (in `~/Claude/Scheduled/<task-id>/SKILL.md`, outside this repo, not version-controlled) is intentionally a **thin bootstrap**: locate the persistent working folder, `git pull`, then read and execute the corresponding file in `prompts/`. This means the real logic lives here in git — editable, diffable, revertable — and the scheduled task config itself rarely needs to change.
+Each scheduled task's actual stored prompt (in `~/Claude/Scheduled/<task-id>/SKILL.md`, outside this repo, not version-controlled) is intentionally a **thin bootstrap**: shallow-clone this repo to a fresh temp dir, verify the checkout, then read and execute the corresponding file in `prompts/`. This means the real logic lives here in git — editable, diffable, revertable — and the scheduled task config itself rarely needs to change.
 
 **Don't edit the scheduled task prompts directly for logic changes.** Edit `prompts/daily.md`, `prompts/weekly.md`, or `prompts/monthly.md` instead, commit, and push. The bootstrap will pick up the change on the next run automatically.
 
-## The persistent working folder
+## Execution environment (read this first)
 
-This repo is kept cloned at a permanently connected folder: `~/Developer/github.com/jghaines/jgh-claude-public` (host path `/Users/jasonhaines/Developer/github.com/jghaines/jgh-claude-public`). This exists so scheduled task runs don't need to re-clone from scratch every time.
+A scheduled task runs in **two distinct places at once**, and confusing them has been the single biggest source of bugs in this repo:
 
-Two important quirks if you're an agent working in this repo via Claude's tools:
+| | Bash sandbox | MCP servers |
+|---|---|---|
+| What it is | An isolated Linux VM (aarch64, Ubuntu 22) | Processes reached via the MCP connector layer |
+| Filesystem | Its own. **Cannot see `/Users/...` at all** | n/a |
+| Home LAN | **No route.** `homeassistant.local` does not resolve | Local stdio servers run on the Mac, which *is* on the LAN |
+| Secrets | **None.** `env` contains only `PATH` | Held in connector config, injected into the server process |
+| Network | github.com works; `*.github.io` is blocked | Whatever the server can reach |
 
-- **Read/Write/Edit tools** use the stable host path above directly.
-- **The bash tool** sees this same folder mounted at `/sessions/<session-id>/mnt/jgh-claude-public` — but `<session-id>` is different every session, so never hardcode it. Locate it dynamically:
-  ```bash
-  REPO=$(find /sessions -maxdepth 3 -type d -name jgh-claude-public 2>/dev/null | head -1)
-  cd "$REPO" && git pull origin main
-  ```
-- If that `find` comes up empty (folder wasn't mounted this run), scheduled tasks fall back to cloning fresh into `/tmp` using an embedded fine-grained PAT (scoped only to this repo: Contents read/write, Metadata read-only, Pages read/write, expires 2027-01-02). That PAT lives only in the scheduled task configs, not in this repo.
-- The persistent folder's `.git/config` already has `user.name`/`user.email` set locally and the remote URL already carries the PAT for push — no need to re-configure these when using the persistent folder path.
+Consequences:
+
+- **Anything needing the home LAN must go through an MCP connector, never a script in the sandbox.** `homeassistant.local` is unreachable from the sandbox — verified, not theoretical. The Home Assistant MCP connector works because `mcp-proxy` is spawned by the desktop app on the Mac (see `claude_desktop_config.json`), and the Mac is on the LAN. This is why `scripts/ha_battery_status.py` could never have worked and `mcp__Home_Assistant__GetLiveContext` does.
+- **Remote/hosted connectors (e.g. Fastmail) work regardless of the Mac's state**, because their credentials live server-side in Anthropic's connector infrastructure. Local stdio connectors (Home Assistant) require the desktop app to be running — `keepAwakeEnabled` is set in the desktop config for this reason.
+- **There is no environment-variable injection and no secrets store** for Cowork scheduled tasks (open feature request: anthropics/claude-code#51854). Any plan that starts "set an env var on the scheduled task" does not work today.
+
+## Getting the repo (no persistent folder)
+
+There is **no permanently connected folder**. Folder connections made via "Add Folder" in a chat session are session-scoped and do not carry over to scheduled runs. The desktop config records a *permission mode* for `~/Developer/github.com/jghaines/jgh-claude-public` (`epitaxy-folder-permission-mode`), but that only means "don't prompt when connected" — it does not connect anything. See anthropics/claude-code#59302.
+
+Each scheduled task therefore clones fresh, shallow, every run:
+
+```bash
+REPO="$(mktemp -d)/repo"
+git clone --depth 1 https://github.com/jghaines/jgh-claude-public.git "$REPO" || exit 1
+cd "$REPO" || exit 1
+git log -1 --oneline || exit 1     # abort if this fails — never run on an unverified checkout
+git config user.email "claude-scheduled-tasks@jgh-claude-public.local"
+git config user.name "Claude Scheduled Tasks"
+git remote set-url --push origin https://jghaines:<PAT>@github.com/jghaines/jgh-claude-public.git
+```
+
+Notes for agents:
+
+- The repo is public, so **cloning needs no credentials**. The PAT is only applied to the push URL, via `set-url --push`, which leaves the existing `git push origin HEAD:main` lines in `prompts/*.md` working unchanged.
+- Use `mktemp -d`. Never a fixed `/tmp` path, and never `rm -rf` a previous clone first — a leftover directory owned by another uid makes the delete fail, the clone silently not happen, and the run proceed on stale instructions. This exact failure caused the 2026-07-25 run to execute a superseded copy of `prompts/daily.md`.
+- **All repo file access goes through bash**, not the Read/Write/Edit tools. Those tools cannot see `$REPO`.
+- Pushing from a shallow clone is fine: the parent commit is already on the remote, so this is the standard `fetch-depth: 1` CI pattern.
 
 ## Content schema
 
@@ -76,11 +102,11 @@ Stdlib-only Python helpers that scheduled tasks shell out to, instead of the age
 
 ### Home Assistant connectivity
 
-Home Assistant lives at `http://homeassistant.local:8123` on the home LAN only. The scheduled task runs in Anthropic's cloud sandbox, which is **not** on that network — `ha_battery_status.py` will fail to resolve the hostname and report `ha_status: unreachable` every day until Tailscale (or an equivalent tunnel) is set up between the sandbox and the home network. This is a known TODO, not a bug; the daily task is written to degrade gracefully (see `prompts/daily.md` step 6) rather than fail when this happens.
+Home Assistant lives at `http://homeassistant.local:8123` on the home LAN. The bash sandbox has **no route to that network and cannot resolve the hostname** — confirmed by direct test, and no amount of allowlisting changes it, because this is a routing problem rather than a permissions one.
 
-Once Tailscale is set up, the scheduled task's environment needs two variables added to its config (same treatment as the GitHub PAT above — never commit these to the repo):
-- `HOME_ASSISTANT_URL` — defaults to `http://homeassistant.local:8123` if unset, but should be set to whatever address is reachable over Tailscale (e.g. the Tailscale MagicDNS name or a `100.x.x.x` IP).
-- `HOME_ASSISTANT_TOKEN` — a Home Assistant long-lived access token (Profile → Security → Long-Lived Access Tokens).
+The fix already applied: `prompts/daily.md` step 6 calls the `mcp__Home_Assistant__GetLiveContext` MCP tool instead of shelling out. That call is serviced by `mcp-proxy` running on the Mac, which is on the LAN, so it works today (verified — returns e.g. `state: '60.4'`, `unit_of_measurement: '%'`).
+
+`scripts/ha_battery_status.py` is **deprecated** and no longer wired into any task. It is kept only as a local-machine reference. The previously documented plan of setting `HOME_ASSISTANT_URL` / `HOME_ASSISTANT_TOKEN` "in the scheduled task's environment" has been removed: there is no such mechanism. The sandbox receives no environment variables (`env` shows only `PATH`), so that approach cannot work regardless of Tailscale. If you ever do want direct HTTP access from the sandbox, you would need HA exposed at a real public hostname *and* that hostname allowlisted *and* the token delivered by some means that does not exist yet — the MCP route is strictly simpler.
 
 ## The payload queue (`payloads/b8-mcp-pending.md`)
 

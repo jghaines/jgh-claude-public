@@ -5,9 +5,11 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 **Data sources:**
 1. **One-Time Task**: See "Check for one-time task files" step below — include as a priority section at the very top of the digest, only if any date-stamped one-time prompt files are found.
 
-2. **Fastmail Summary**: The Fastmail MCP connector IS connected to this account (confirmed working — do not assume it's unavailable). At the start of this task, call ToolSearch with query "fastmail" (or "select:mcp__fastmail" style queries) to load the Fastmail MCP tools, then use them to check the Inbox and Subscriptions folders for unread messages since yesterday. Only treat Fastmail as unavailable if ToolSearch genuinely returns no Fastmail tools after trying at least two query variations (e.g. "fastmail", "email inbox").
+2. **Fastmail Summary**: Load the Fastmail MCP tools with ToolSearch (try query "fastmail", then "email inbox" if the first returns nothing). If tools load, use them to check the Inbox and Subscriptions folders for unread messages since yesterday, and set `fastmail_status: ok` (or `empty` if there were genuinely no unread messages).
 
-3. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked). Include links to centr
+   If no Fastmail tools load after those two attempts, OR a Fastmail tool call errors or hangs, set `fastmail_status: skipped` with a one-line `fastmail_note` saying what happened, and move on immediately. Do not retry, and do not attempt to reach Fastmail by any other route. The connector has been intermittently disconnected; a scheduled run has no human present to approve a permission prompt, so a hanging tool call will stall the entire run. Steps 3 and 4 depend on this step — if it was skipped, omit those sections rather than inventing content.
+
+3. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked). Include links to the source article for each item where the email provides one.
 
 4. **AI News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked)
 

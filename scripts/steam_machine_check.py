@@ -2,33 +2,47 @@
 """
 Steam Machine (AU store) availability/price checker.
 
-Stdlib-only by design (urllib, re, json) so it runs in any sandbox without
-a pip install step. Intended to be invoked by the weekly-digest-recap
-scheduled task (see prompts/weekly.md), which then commits whatever this
-script writes to payloads/steam-machine-pending.md.
+Stdlib-only by design (urllib, json) so it runs in any sandbox without a pip
+install step. Intended to be invoked by the weekly-digest-recap scheduled task
+(see prompts/weekly.md), which then commits whatever this script writes to
+payloads/weekly-pending.md.
 
-Efficiency notes:
-- Uses a conditional GET (If-None-Match) against a locally cached ETag so an
-  unchanged page costs a 304 response, not a full body transfer.
-- Falls back to content-hash comparison if the server doesn't return an ETag.
-- Parses with targeted regexes instead of a full HTML/DOM parser - there's
-  no need to build a DOM just to pull two fields off the page.
-- Cache lives outside git (scripts/.steam_cache.json, gitignored) so it
-  persists across runs in the persistent working folder without polluting
-  commit history.
+Data source: this reads Steam's store API directly rather than scraping
+https://store.steampowered.com/hardware/steammachine. The HTML served for that
+page contains no prices and no purchase state at all - both are rendered
+client-side from the two API calls below, so a regex over the served HTML can
+only ever match unrelated numbers (it used to pick up "Under A$ 5.00" from the
+store's price-filter dropdown and report that as the console's price).
+
+- IStoreBrowseService/GetItems enumerates the SKUs from the single Steam Machine
+  appid, so the four package IDs are discovered rather than hardcoded and a new
+  SKU shows up on its own.
+- IStoreBrowseService/GetHardwareItems returns the stock/waitlist state per
+  package, which is the field the page's own buy box is driven by.
+
+Both return small JSON documents, so the local cache (scripts/.steam_cache.json,
+gitignored) exists only for week-over-week change detection, not to save
+bandwidth. Change detection is deliberately availability-only: prices are
+reported for context but a price move is not treated as news.
 """
 
-import hashlib
 import json
-import re
 import sys
+import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
+# The Steam Machine store app. Its purchase_options are the individual SKUs
+# (512GB / 2TB, each with or without a controller).
+STEAM_APPID = 4165910
 STEAM_URL = "https://store.steampowered.com/hardware/steammachine"
-TIMEOUT = 10
+COUNTRY = "AU"
+TIMEOUT = 15
+
+GET_ITEMS_URL = "https://api.steampowered.com/IStoreBrowseService/GetItems/v1/"
+GET_HARDWARE_URL = "https://api.steampowered.com/IStoreBrowseService/GetHardwareItems/v1/"
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CACHE_FILE = REPO_ROOT / "scripts" / ".steam_cache.json"
@@ -36,12 +50,7 @@ CACHE_FILE = REPO_ROOT / "scripts" / ".steam_cache.json"
 # which globs payloads/*-pending.md) - this is the weekly task's payload.
 PAYLOAD_FILE = REPO_ROOT / "payloads" / "weekly-pending.md"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    # cc=AU + Steam's currency cookie nudge the store to return AUD pricing
-    # regardless of where the request originates from.
-    "Cookie": "birthtime=0; wants_mature_content=1; steamCountry=AU%7C0",
-}
+CONTEXT = {"language": "english", "country_code": COUNTRY}
 
 
 def load_cache() -> dict:
@@ -58,128 +67,166 @@ def save_cache(data: dict) -> None:
     CACHE_FILE.write_text(json.dumps(data, indent=2))
 
 
-def fetch_page(cache: dict) -> tuple[str | None, bool, str | None]:
-    """
-    Returns (html, was_cached, etag).
-    html is None only on total failure with no usable cache fallback.
-    """
-    req = urllib.request.Request(STEAM_URL, headers=dict(HEADERS))
-    if cache.get("etag"):
-        req.add_header("If-None-Match", cache["etag"])
-
-    try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
-            etag = resp.headers.get("ETag")
-            return html, False, etag
-    except urllib.error.HTTPError as e:
-        if e.code == 304:
-            return cache.get("html"), True, cache.get("etag")
-        print(f"HTTP error fetching Steam page: {e}", file=sys.stderr)
-        return cache.get("html"), True, cache.get("etag")
-    except urllib.error.URLError as e:
-        print(f"Network error fetching Steam page: {e}", file=sys.stderr)
-        return cache.get("html"), True, cache.get("etag")
+def api_get(url: str, payload: dict) -> dict:
+    """GET a Steam store API method with its input_json argument."""
+    query = urllib.parse.urlencode({"input_json": json.dumps(payload)})
+    req = urllib.request.Request(f"{url}?{query}", headers={"User-Agent": "jgh-claude-weekly-check"})
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+        return json.loads(resp.read().decode("utf-8"))
 
 
-def parse_availability(html: str) -> tuple[bool | None, str | None]:
-    """Selective regex parse - no DOM library needed for two fields."""
-    add_to_cart = re.search(
-        r'"purchase".*?type["\']?\s*:\s*["\']?addtocart', html, re.IGNORECASE | re.DOTALL
+def fetch_skus() -> list[dict]:
+    """One appid in, every purchasable SKU out (id, name, formatted price)."""
+    data = api_get(
+        GET_ITEMS_URL,
+        {
+            "ids": [{"appid": STEAM_APPID}],
+            "context": CONTEXT,
+            "data_request": {"include_basic_info": True, "include_all_purchase_options": True},
+        },
     )
-    notify_me = re.search(r'notify.me|out.of.stock|coming.soon', html, re.IGNORECASE)
-    available = bool(add_to_cart) and not bool(notify_me) if add_to_cart or notify_me else None
+    items = data.get("response", {}).get("store_items", [])
+    if not items:
+        raise ValueError("GetItems returned no store_items")
 
-    price_match = re.search(r'A\$\s*([\d,]+(?:\.\d{2})?)', html)
-    price = price_match.group(1).replace(",", "") if price_match else None
+    skus = []
+    for option in items[0].get("purchase_options", []):
+        skus.append(
+            {
+                "packageid": option["packageid"],
+                "name": option.get("purchase_option_name", "Unknown model"),
+                "price": option.get("formatted_final_price"),
+            }
+        )
+    if not skus:
+        raise ValueError("GetItems returned no purchase_options")
+    return skus
 
-    return available, price
+
+def fetch_availability(package_ids: list[int]) -> dict[int, dict]:
+    data = api_get(
+        GET_HARDWARE_URL, {"packageid": package_ids, "context": CONTEXT}
+    )
+    return {d["packageid"]: d for d in data.get("response", {}).get("details", [])}
 
 
-def write_payload(status: dict, changed: bool) -> None:
+def sku_status(detail: dict | None) -> tuple[bool | None, str]:
+    """
+    Map the hardware detail block to (available, human status).
+
+    Fields that describe the *requesting account* (account_restricted_from_purchasing,
+    reservation_state, the *_token fields) are ignored - these calls are anonymous,
+    so those say nothing about the store.
+    """
+    if detail is None:
+        return None, "Unknown"
+
+    if not detail.get("allow_purchase_in_country", True):
+        return False, "Not sold in this country"
+
+    waitlist = (
+        detail.get("requires_reservation")
+        or detail.get("queue_in_waitlist")
+        or detail.get("position_is_waitlist")
+    )
+    if waitlist:
+        return False, "Waitlist only"
+    if not detail.get("inventory_available"):
+        return False, "Out of stock"
+    return True, "In stock"
+
+
+def write_payload(skus: list[dict] | None, change_note: str, previous_summary: str | None) -> None:
     PAYLOAD_FILE.parent.mkdir(parents=True, exist_ok=True)
     date_str = datetime.now().strftime("%Y-%m-%d")
 
-    if status["available"] is None:
+    if not skus:
         body = (
             f"## Steam Machine Availability — {date_str}\n\n"
-            f"_Could not determine availability this week (parse or fetch issue). "
-            f"Last known: {status.get('previous_summary', 'no prior data')}._\n"
+            f"_Could not determine availability this week (API or network issue). "
+            f"Last known: {previous_summary or 'no prior data'}._\n"
         )
+        PAYLOAD_FILE.write_text(body)
+        return
+
+    if any(s["available"] for s in skus):
+        headline = "In stock — at least one model is purchasable now"
+    elif all(s["available"] is False for s in skus):
+        headline = "Not purchasable — " + ", ".join(sorted({s["status"] for s in skus})).lower()
     else:
-        avail_text = "In stock" if status["available"] else "Out of stock / notify-me only"
-        price_text = f"A${status['price']}" if status["price"] else "not found on page"
-        change_text = status["change_note"] if changed else "No change since last check."
+        headline = "Mixed / partly unknown"
 
-        body = (
-            f"## Steam Machine Availability — {date_str}\n\n"
-            f"**Store:** Steam (AU)\n"
-            f"**Availability:** {avail_text}\n"
-            f"**Price:** {price_text}\n"
-            f"**Change since last check:** {change_text}\n\n"
-            f"[View on Steam]({STEAM_URL})\n"
-        )
+    rows = "\n".join(
+        f"| {s['name']} | {s['price'] or '—'} | {s['status']} |" for s in skus
+    )
 
+    body = (
+        f"## Steam Machine Availability — {date_str}\n\n"
+        f"**Store:** Steam ({COUNTRY})\n"
+        f"**Availability:** {headline}\n"
+        f"**Change since last check:** {change_note}\n\n"
+        f"| Model | Price | Status |\n"
+        f"| --- | --- | --- |\n"
+        f"{rows}\n\n"
+        f"[View on Steam]({STEAM_URL})\n"
+    )
     PAYLOAD_FILE.write_text(body)
+
+
+def describe_change(skus: list[dict], previous: dict) -> str:
+    """Availability-only change detection - price moves are not news."""
+    if not previous:
+        return "No prior data to compare."
+
+    changes = []
+    for sku in skus:
+        was = previous.get(str(sku["packageid"]), {}).get("status")
+        if was is not None and was != sku["status"]:
+            changes.append(f"{sku['name']}: {was} → {sku['status']}")
+
+    new_skus = [s["name"] for s in skus if str(s["packageid"]) not in previous]
+    if new_skus:
+        changes.append("New model listed: " + ", ".join(new_skus))
+
+    return "; ".join(changes) if changes else "No availability change since last check."
 
 
 def main() -> int:
     cache = load_cache()
-    html, was_cached, etag = fetch_page(cache)
+    previous = cache.get("skus", {})
+    previous_summary = cache.get("summary")
 
-    if html is None:
-        print("No page content available (fetch failed, no cache fallback).")
-        write_payload({"available": None, "price": None}, changed=False)
+    try:
+        skus = fetch_skus()
+        details = fetch_availability([s["packageid"] for s in skus])
+    except (urllib.error.URLError, urllib.error.HTTPError, ValueError, KeyError, json.JSONDecodeError) as e:
+        print(f"Failed to fetch Steam Machine status: {e}", file=sys.stderr)
+        write_payload(None, "", previous_summary)
+        print(f"Payload written to {PAYLOAD_FILE.relative_to(REPO_ROOT)}")
         return 1
 
-    content_hash = hashlib.md5(html.encode()).hexdigest()
-    prev_hash = cache.get("content_hash")
-    prev_available = cache.get("available")
-    prev_price = cache.get("price")
+    for sku in skus:
+        sku["available"], sku["status"] = sku_status(details.get(sku["packageid"]))
 
-    # If it's the cached page verbatim (304 or identical hash), skip re-parsing.
-    if was_cached and prev_hash and content_hash == prev_hash:
-        available, price = prev_available, prev_price
-        changed = False
-    else:
-        available, price = parse_availability(html)
-        changed = (available != prev_available) or (price != prev_price)
+    change_note = describe_change(skus, previous)
+    changed = change_note not in ("No availability change since last check.", "No prior data to compare.")
+    summary = "; ".join(f"{s['name']} {s['status']} at {s['price']}" for s in skus)
 
-    change_note = "No prior data to compare."
-    if prev_hash is not None:
-        if available != prev_available and available is not None:
-            change_note = (
-                f"Became {'available' if available else 'unavailable'} "
-                f"(was {'available' if prev_available else 'unavailable'})."
-            )
-        elif price != prev_price and price and prev_price:
-            change_note = f"Price changed from A${prev_price} to A${price}."
-        elif changed:
-            change_note = "Status changed."
-
-    status = {
-        "available": available,
-        "price": price,
-        "change_note": change_note,
-        "previous_summary": (
-            f"{'available' if prev_available else 'unavailable'}, A${prev_price}"
-            if prev_hash else None
-        ),
-    }
-    write_payload(status, changed=changed)
-
+    write_payload(skus, change_note, previous_summary)
     save_cache(
         {
-            "content_hash": content_hash,
-            "etag": etag,
-            "html": html,
-            "available": available,
-            "price": price,
+            "skus": {
+                str(s["packageid"]): {"name": s["name"], "price": s["price"], "status": s["status"]}
+                for s in skus
+            },
+            "summary": summary,
             "checked_at": datetime.now(timezone.utc).isoformat(),
         }
     )
 
-    print(f"Availability: {available} | Price: A${price} | Changed: {changed}")
+    for sku in skus:
+        print(f"  {sku['name']}: {sku['status']} | {sku['price']}")
+    print(f"Availability changed since last check: {changed}")
     print(f"Payload written to {PAYLOAD_FILE.relative_to(REPO_ROOT)}")
     return 0
 

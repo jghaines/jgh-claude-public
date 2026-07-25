@@ -61,6 +61,11 @@ class DigestThemeManager extends HTMLElement {
       root.classList.remove('dark');
     }
 
+    // Keep the toggle bar's own shadow DOM in sync — its styles key off
+    // :host(.dark). render() sets this once at startup; without this the bar
+    // stays frozen at its initial theme when the user toggles.
+    this.shadowRoot.host.classList.toggle('dark', theme === 'dark');
+
     // Dispatch custom event for other components
     window.dispatchEvent(
       new CustomEvent('theme-changed', {

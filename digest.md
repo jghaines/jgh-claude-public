@@ -1,16 +1,13 @@
 ---
 date: 2026-07-25
-generated_at: 2026-07-25T10:45:00+10:00
+generated_at: 2026-07-25T03:33:43.144117+00:00
 fastmail_status: empty
-fastmail_note: "No unread messages in Inbox or Subscriptions since yesterday"
-ha_status: unreachable
+fastmail_note: "No unread messages in Inbox or Subscriptions folders since yesterday"
+ha_status: ok
 sections:
   - id: apple-news
     title: Apple News
     icon: "🍎"
-  - id: weekly-update
-    title: Weekly Update
-    icon: "🎮"
   - id: battery
     title: Battery Status
     icon: "🔋"
@@ -18,43 +15,34 @@ sections:
 
 ## Apple News
 
-### Q3 2026 Earnings Call Scheduled
-*July 25*
+### iPhone 17 Launch
+*July 21*
 
-Apple has scheduled its Q3 2026 earnings conference call for Thursday, July 30, 2026, at 2:00 p.m. Pacific Time. This may be the last earnings call with Tim Cook in attendance, as he transitions to Executive Chairman in September with John Ternus stepping into the CEO role. [Source: MacDailyNews](https://macdailynews.com/2026/07/09/apple-schedules-q3-2026-earnings-conference-call-for-july-30th/)
+Apple's iPhone 17 boosts founder productivity with better storage, AI workflows, and smoother business mobility. The line features storage up to 2TB, stronger pro segmentation, and a bigger push toward mobile media work for founders, creators, and small teams. [Apple iPhone News](https://blog.mean.ceo/apple-iphone-news-july-2026/)
 
-### Apple Upgrade Leasing Program Launch
-*July 25*
+### New Device Leasing Program (Apple Upgrade)
+*July 21*
 
-Apple is launching Apple Upgrade, a device leasing program in partnership with Klarna Group Plc, set to launch July 28. This represents one of the biggest changes to how the company sells devices, potentially expanding accessibility to Apple products. [Source: Bloomberg](https://www.bloomberg.com/news/articles/2026-07-21/apple-to-launch-upgrade-device-leasing-program-with-klarna-to-spur-sales)
+Apple is preparing to introduce Apple Upgrade, a device leasing program marking one of the biggest-ever changes to how the company sells devices, planned to launch July 28, supporting most iPhone, Mac, iPad and Apple Watch models. [Bloomberg Report](https://www.bloomberg.com/news/articles/2026-07-21/apple-to-launch-upgrade-device-leasing-program-with-klarna-to-spur-sales)
 
-### Strong Revenue Growth Expectations
-*July 25*
+### Siri AI Now Available
+*July*
 
-Apple is projecting Q3 2026 revenue growth between 14-17% year-over-year, with revenue potentially reaching $110 billion compared to $94 billion in Q3 2025. The company has delivered consistent growth with record revenues in recent periods and strong iPhone 17 family reception.
+Apple announced "Siri AI" at WWDC 2026, and the revamped assistant is available to test on the iOS 27 developer beta, with full iOS 27 release in September for iPhone 15 Pro or newer users.
 
-## Weekly Update
+### Q3 2026 Earnings Announcement
+*July 30*
 
-### Steam Machine Availability — 2026-07-24
-*July 24*
+Apple will announce fiscal Q3 2026 results on July 30 with a conference call at 2:00 p.m. PT. Tim Cook is expected to participate as Apple's CEO for the last time. [9to5Mac](https://9to5mac.com/2026/07/02/apple-sets-q3-2026-earnings-release-for-july-30/)
 
-**Store:** Steam (AU)
-**Availability:** Not purchasable — waitlist only
-**Change since last check:** No availability change since last check.
+### MacBook Redesign Coming
+*July*
 
-| Model | Price | Status |
-| --- | --- | --- |
-| Steam Machine 512GB | A$ 1,609.00 | Waitlist only |
-| Steam Machine 512GB with Controller | A$ 1,728.00 | Waitlist only |
-| Steam Machine 2TB | A$ 2,109.00 | Waitlist only |
-| Steam Machine 2TB with Controller | A$ 2,228.00 | Waitlist only |
-
-[View on Steam](https://store.steampowered.com/hardware/steammachine)
+Apple's first high-end MacBook redesign in five years is expected to arrive between late 2026 and early 2027, with delays due to global memory chip shortages.
 
 ## Battery Status
 
-### Battery Status Unavailable
-*July 25*
+### Battery Levels
+*2026-07-25*
 
-Home Assistant battery sensor check failed (timeout). Unable to retrieve current battery levels at this time.
-
+- Battery Level: 100%

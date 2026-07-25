@@ -22,20 +22,20 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 Only include a section in the output if it has noteworthy content, EXCEPT the `battery` section from step 6, which is always included — it reports its own status (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing. Skip other empty sections entirely (omit from both frontmatter `sections` list and body).
 
 **Check for one-time task files (do this FIRST, before anything else — highest priority):**
-Scan the repo's `prompts/` folder (host path `/Users/jasonhaines/Developer/github.com/jghaines/jgh-claude-public/prompts/`) for files matching the pattern `prompts/<yyyy-mm-dd>.md` — plain numeric ISO date, e.g. `prompts/2026-07-23.md` (same date format used everywhere else in this repo, e.g. `digest.md`'s `date:` field). These are ad hoc, one-time task instructions the user wrote for a specific date — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted.
+These are ad hoc, one-time task instructions the user wrote for a specific date, one per file named `prompts/<yyyy-mm-dd>.md` (plain numeric ISO date, e.g. `prompts/2026-07-23.md`) — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted. The date-matching logic lives in a script so it doesn't have to be re-derived each run; from the repo directory run:
+```
+python3 scripts/find_dated_prompts.py --contents
+```
+It prints a JSON array of the matching files (each with `date`, `path`, and full `contents`), already filtered and sorted for you: it includes any file dated today or earlier — so a file is still picked up on the next run however many days late — ignores future-dated files, and returns them oldest date first. An empty array `[]` means no files match, which is the normal case for most days; skip this whole step when that happens. (Run without `--contents` if you only want the paths; pass `--today YYYY-MM-DD` only for testing.)
 
-A matching file should be picked up if its date is today OR any earlier date — if this task didn't run on the exact day (task disabled, error, etc.), pick it up on the very next run regardless of how many days late. Ignore any dated file whose date is in the future. There may be more than one matching file at once; handle all of them.
-
-For each matching file, oldest date first:
-1. Read the file's contents in full and execute/evaluate whatever it asks for — these are arbitrary, one-off instructions (a reminder, a lookup, a task to perform), not a fixed schema. Use judgment.
+For each file in that JSON array, in the order given (oldest date first):
+1. Take the file's `contents` from the JSON and execute/evaluate whatever it asks for — these are arbitrary, one-off instructions (a reminder, a lookup, a task to perform), not a fixed schema. Use judgment.
 2. Fold the result into a section with id `one-time-tasks`, title `One-Time Task` (or a more specific title drawn from the file's own content if it has one), icon `⚡`. This section must be listed FIRST in the frontmatter `sections` list and appear FIRST in the body — ahead of Fastmail/AI News/Apple News/scheduled-payload sections. If multiple dated files matched, include each as its own `###` item within this single section, oldest first.
 3. After folding its result into the digest, delete the file so it never runs again:
    ```
    git rm prompts/<the-matched-filename>.md
    ```
    Stage this alongside the digest.md commit below (or as its own commit) — either is fine, just make sure everything is pushed together in one `git push` at the end.
-
-If no dated files match, skip this step entirely — that's the normal case for most days.
 
 **Check for Scheduled payload (do this next, before generating the digest):**
 Less frequent scheduled tasks write their findings to `payloads/*-pending.md` in this repo. From the repo directory (already pulled by the bootstrap step):

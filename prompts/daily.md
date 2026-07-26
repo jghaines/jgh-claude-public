@@ -111,7 +111,7 @@ sections:
 ```
 Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, then a short prose summary. Keep summaries tight — 1-3 sentences, no bullet lists needed.
 
-**Per-item timestamps:** Do NOT put an italic timestamp line under news items (AI News, Apple News, etc.) — they were noise, so omit them. The ONLY item that keeps a timestamp is **Battery Levels**, whose italic line is the reading time formatted as `yyyy MMMM dd dow HH:mm` (e.g. `2026 July 26 Sunday 05:45`) — the same format the front-end shows at the top of the digest. Use the `generated_at` time for it.
+**Per-item timestamps:** Do NOT put an italic timestamp line under news items (AI News, Apple News, etc.) — they were noise, so omit them. The ONLY item that keeps a timestamp is **Battery Levels**, whose italic line is the **time of retrieval** — the wall-clock time you actually made the Home Assistant MCP call and got the reading — formatted as `yyyy MMMM dd dow HH:mm` (e.g. `2026 July 26 Sunday 05:45`). Use local Alice Springs time (Australia/Darwin, ACST +09:30, no daylight saving). This is the same format the front-end shows at the top of the digest, but a distinct value: the header is the **digest generation** time (`generated_at`), whereas the battery line is when the sensor was read. In practice they're close, but keep them separate.
 
 **Source links on news items:** End each news item's summary with a `[Read more](<url>)` link followed by the article's hostname in square brackets, e.g. `[Read more](https://www.wired.com/story/...) [wired.com]`. Strip a leading `www.` from the hostname (`www.wired.com` → `wired.com`). Only add this when the email gives a real source URL; if there's no link, just leave the summary as prose.
 

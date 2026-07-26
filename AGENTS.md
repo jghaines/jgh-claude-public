@@ -68,7 +68,7 @@ Notes for agents:
 
 ## Content schema
 
-`digest.md` and `digest-weekly.md` share the same shape: YAML frontmatter declaring which sections exist (id, title, icon, in display order — only sections with actual content are listed), followed by a markdown body using `##` per section (matching frontmatter titles) and `###` per item, with an italic timestamp line and a short prose summary.
+`digest.md` and `digest-weekly.md` share the same shape: YAML frontmatter declaring which sections exist (id, title, icon, in display order — only sections with actual content are listed), followed by a markdown body using `##` per section (matching frontmatter titles) and `###` per item, then a short prose summary. News items carry no per-item timestamp (the front-end shows one date/time for the whole digest, formatted `yyyy MMMM dd dow HH:mm` from `generated_at`); only the Battery Levels item keeps an italic timestamp line, in that same format. News items end their summary with a `[Read more](url)` link followed by the source hostname in brackets, e.g. `[Read more](…) [wired.com]`.
 
 ```
 ---
@@ -86,9 +86,8 @@ sections:
 ## AI News
 
 ### Item title
-*July 21*
 
-1-3 sentence summary, with markdown links to sources where relevant.
+1-3 sentence summary. [Read more](https://www.wired.com/story/…) [wired.com]
 ```
 
 Section `id`s should stay consistent day to day (e.g. always `ai-news`, `apple-news`) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day.

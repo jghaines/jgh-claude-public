@@ -89,30 +89,31 @@ sections:
 ## AI News
 
 ### <Item title>
-*<timestamp, e.g. "July 21">*
 
-<1-3 sentence summary. Include source links as markdown links where available.>
+<1-3 sentence summary.> [Read more](<article url>) [<hostname>]
 
 ### <Next item title>
-*<timestamp>*
 
-<summary>
+<summary> [Read more](<article url>) [<hostname>]
 
 ## Apple News
 
 ### <Item title>
-*<timestamp>*
 
-<summary>
+<summary> [Read more](<article url>) [<hostname>]
 
 ## Battery Status
 
 ### Battery Levels
-*<timestamp>*
+*<yyyy MMMM dd dow HH:mm, e.g. "2026 July 26 Sunday 05:45">*
 
 <bullet list of device: percentage from the Home Assistant MCP call (e.g. "- Battery Level: 60%"), or an unreachable/empty status message if the MCP call failed or found no sensor>
 ```
-Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, followed by an italic timestamp line, then a short prose summary (with markdown links to sources where relevant). Keep summaries tight — 1-3 sentences, no bullet lists needed.
+Use `##` headers matching each section's `title` from frontmatter, and `###` per item within a section, then a short prose summary. Keep summaries tight — 1-3 sentences, no bullet lists needed.
+
+**Per-item timestamps:** Do NOT put an italic timestamp line under news items (AI News, Apple News, etc.) — they were noise, so omit them. The ONLY item that keeps a timestamp is **Battery Levels**, whose italic line is the reading time formatted as `yyyy MMMM dd dow HH:mm` (e.g. `2026 July 26 Sunday 05:45`) — the same format the front-end shows at the top of the digest. Use the `generated_at` time for it.
+
+**Source links on news items:** End each news item's summary with a `[Read more](<url>)` link followed by the article's hostname in square brackets, e.g. `[Read more](https://www.wired.com/story/...) [wired.com]`. Strip a leading `www.` from the hostname (`www.wired.com` → `wired.com`). Only add this when the email gives a real source URL; if there's no link, just leave the summary as prose.
 
 Choose section ids/titles/icons freely based on what content you actually gathered that day (e.g. don't force "Apple News" if there's nothing noteworthy — just omit it). The ids above are just the recurring ones; keep them consistent day to day so the front-end can rely on stable ids for known categories.
 

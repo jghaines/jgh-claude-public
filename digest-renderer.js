@@ -112,21 +112,20 @@ class DigestRenderer extends HTMLElement {
   }
 
   /**
-   * Format the front matter `date` as a page header, e.g.
-   * "FRIDAY, JULY 24, 2026". Falls back to the raw value if unparseable.
+   * Format the front matter timestamp as a page header in the shape
+   * `yyyy MMMM dd dow HH:mm`, e.g. "2026 July 26 Sunday 05:45".
+   * Prefers `generated_at` (which carries the time); a date-only value
+   * still renders, just at 00:00. Falls back to the raw value if unparseable.
    */
   formatDate(value) {
     if (!value) return '';
-    const date = new Date(`${value}T00:00:00`);
+    // Append midnight if the value is date-only (no time component).
+    const date = new Date(/T/.test(value) ? value : `${value}T00:00:00`);
     if (isNaN(date)) return value;
-    return date
-      .toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-      .toUpperCase();
+    const pad = (n) => String(n).padStart(2, '0');
+    const month = date.toLocaleDateString('en-US', { month: 'long' });
+    const dow = date.toLocaleDateString('en-US', { weekday: 'long' });
+    return `${date.getFullYear()} ${month} ${pad(date.getDate())} ${dow} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   /**
@@ -233,7 +232,7 @@ class DigestRenderer extends HTMLElement {
       if (section.title && section.icon) this.icons[section.title] = section.icon;
     }
 
-    this.date = this.formatDate(meta.date);
+    this.date = this.formatDate(meta.generated_at || meta.date);
     this.content = this.markdownToHtml(body);
     this.renderContent();
   }

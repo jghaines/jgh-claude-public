@@ -118,6 +118,10 @@ Everything here is served via GitHub Pages (branch `main`, root folder) at `http
 
 Do not attempt to fetch `*.github.io` URLs from inside the sandbox to "verify" a publish — that domain isn't on the sandbox's allowlist, so the fetch will always fail even when the push succeeded and the page is fine from an actual browser/phone. Treat a successful `git push` as success; don't treat the inevitable verification-fetch failure as a problem.
 
+### Parallel git changes are expected — pull before pushing
+
+Multiple writers push to `main` independently: the scheduled tasks (daily/weekly/monthly) commit content on their own cadence, and a human (or an interactive agent) may be editing `prompts/*` or the front-end at the same time. A `git push` can therefore be rejected as non-fast-forward because another writer landed a commit since your last fetch — this is normal, not a conflict to escalate. Recover with `git pull --rebase origin main` then push again; the changes almost always touch different files (content vs. prompts vs. presentation) and rebase cleanly. Don't `git push --force`.
+
 ## If you're an agent picking this repo up for the first time
 
 Read `prompts/daily.md`, `prompts/weekly.md`, and `prompts/monthly.md` before touching anything — they're the actual current behavior. This AGENTS.md file describes the shape of the system; those files describe what actually runs.

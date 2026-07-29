@@ -1,9 +1,9 @@
 ---
-date: 2026-07-29
-generated_at: 2026-07-28T23:27:24.408473+00:00
-fastmail_status: empty
-fastmail_note: "No unread messages in Inbox or Subscriptions since yesterday"
-ha_status: ok
+date: 2026-07-30
+generated_at: 2026-07-30T05:48:00+09:30
+fastmail_status: ok
+fastmail_note: ""
+ha_status: unreachable
 sections:
   - id: battery
     title: Battery Status
@@ -13,6 +13,6 @@ sections:
 ## Battery Status
 
 ### Battery Levels
-*2026 July 29 Wed 08:57*
+*2026 July 30 Thursday 05:48*
 
-- Battery Level: 40.1%
+Home Assistant MCP connector is not available in this run — battery reading unreachable.

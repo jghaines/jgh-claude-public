@@ -9,7 +9,7 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
    If no Fastmail tools load after those two attempts, OR a Fastmail tool call errors or hangs, set `fastmail_status: skipped` with a one-line `fastmail_note` saying what happened, and move on immediately. Do not retry, and do not attempt to reach Fastmail by any other route. The connector has been intermittently disconnected; a scheduled run has no human present to approve a permission prompt, so a hanging tool call will stall the entire run. Steps 3, 4, and 5 depend on this step — if it was skipped, omit those sections rather than inventing content.
 
-3. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked). Include links to the source article for each item where the email provides one.
+3. **Centralian News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked), typically from *The Centralian Today* newsletter. Curate for **Ack's interests**: remote schooling, and music teaching / music programs in remote schools. Surface articles on those themes — e.g. a piece on the Remote Music Rangers program working with locals in remote NT communities is exactly the kind of thing to include. Other genuinely notable local news is fine too, but lead with those themes. Include a link to the source article for each item where the email provides one. Note on timing: this newsletter often arrives in the evening (~6:30pm ACST), which is after that day's digest has already run — so an evening edition is picked up by the *next* morning's digest. That lag is expected, not a miss.
 
 4. **AI News**: Extract highlights from Fastmail inbox messages (requires step 2 to have worked)
 
@@ -19,7 +19,10 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 7. **Scheduled payload**: See step below — include only if a pending payload file exists.
 
-Only include a section in the output if it has noteworthy content, EXCEPT the `battery` section from step 6, which is always included — it reports its own status (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing. Skip other empty sections entirely (omit from both frontmatter `sections` list and body).
+Section inclusion rules:
+- **The three news sections — Centralian News, AI News, Apple News — are always included whenever Fastmail succeeded (`fastmail_status: ok`)**, even on a slow day. If one has nothing noteworthy, still emit the section with a single line: *Nothing newsworthy today.* This is deliberate reassurance that the task ran and genuinely found nothing, rather than the section silently vanishing. (If `fastmail_status` is `skipped` or `empty`, omit all three — the status field already explains why there's no news.)
+- **The `battery` section is always included** regardless of status — it reports its own state (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing.
+- **All other sections** (one-time-tasks, monthly/weekly updates, scheduled payload) are included only when they have content; omit them entirely (from both the frontmatter `sections` list and the body) otherwise.
 
 **Check for one-time task files (do this FIRST, before anything else — highest priority):**
 These are ad hoc, one-time task instructions the user wrote for a specific date, one per file named `prompts/<yyyy-mm-dd>.md` (plain numeric ISO date, e.g. `prompts/2026-07-23.md`) — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted. The date-matching logic lives in a script so it doesn't have to be re-derived each run; from the repo directory run:
@@ -61,6 +64,9 @@ sections:
   - id: one-time-tasks
     title: One-Time Task
     icon: "⚡"
+  - id: centralian-news
+    title: Centralian News
+    icon: "📰"
   - id: ai-news
     title: AI News
     icon: "🧠"
@@ -76,7 +82,7 @@ sections:
   - id: battery
     title: Battery Status
     icon: "🔋"
-  (only list sections that actually have content below, in the order they appear in the body — one-time-tasks always goes first when present; battery always goes last and is always listed, even when ha_status is empty or unreachable)
+  (list sections in the order they appear in the body — one-time-tasks always goes first when present; the three news sections are always listed when `fastmail_status: ok`, even if a section's only content is a "Nothing newsworthy today." line; battery always goes last and is always listed, even when ha_status is empty or unreachable; every other section is listed only when it has content)
 ---
 
 ## One-Time Task
@@ -85,6 +91,12 @@ sections:
 *<the file's date, e.g. "2026-07-23">*
 
 <result of executing that file's instructions>
+
+## Centralian News
+
+### <Item title>
+
+<summary> [Read more](<article url>) [<hostname>]
 
 ## AI News
 
@@ -98,9 +110,7 @@ sections:
 
 ## Apple News
 
-### <Item title>
-
-<summary> [Read more](<article url>) [<hostname>]
+*Nothing newsworthy today.*
 
 ## Battery Status
 
@@ -115,7 +125,7 @@ Use `##` headers matching each section's `title` from frontmatter, and `###` per
 
 **Source links on news items:** End each news item's summary with a `[Read more](<url>)` link followed by the article's hostname in square brackets, e.g. `[Read more](https://www.wired.com/story/...) [wired.com]`. Strip a leading `www.` from the hostname (`www.wired.com` → `wired.com`). Only add this when the email gives a real source URL; if there's no link, just leave the summary as prose.
 
-Choose section ids/titles/icons freely based on what content you actually gathered that day (e.g. don't force "Apple News" if there's nothing noteworthy — just omit it). The ids above are just the recurring ones; keep them consistent day to day so the front-end can rely on stable ids for known categories.
+Choose section ids/titles/icons freely for one-off or ad-hoc content based on what you gathered that day. But keep the recurring ids stable day to day (`centralian-news`, `ai-news`, `apple-news`, `battery`, etc.) so the front-end can rely on them — and remember the three news sections and battery follow the always-include rules above rather than being omitted when empty.
 
 **Publish via git:**
 In the repo directory (already pulled by the bootstrap step, reuse it, don't re-clone):

@@ -1,9 +1,9 @@
 ---
-date: 2026-07-30
-generated_at: 2026-07-30T05:48:00+09:30
+date: 2026-07-31
+generated_at: 2026-07-31T05:47:33+09:30
 fastmail_status: ok
 fastmail_note: ""
-ha_status: unreachable
+ha_status: ok
 sections:
   - id: centralian-news
     title: Centralian News
@@ -34,6 +34,6 @@ sections:
 ## Battery Status
 
 ### Battery Levels
-*2026 July 30 Thursday 05:48*
+*2026 July 31 Friday 05:47*
 
-Home Assistant MCP connector is not available in this run — battery reading unreachable.
+- Battery Level: 19% ⚠️ low

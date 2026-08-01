@@ -90,7 +90,7 @@ sections:
 1-3 sentence summary. [Read more](https://www.wired.com/story/…) [wired.com]
 ```
 
-Section `id`s should stay consistent day to day (e.g. always `centralian-news`, `ai-news`, `apple-news`, `battery`) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day. The three news sections are always emitted when Fastmail succeeded (`fastmail_status: ok`) — an empty one carries a "Nothing newsworthy today." line rather than being dropped — and `battery` is always emitted regardless of status; everything else appears only when it has content. See `prompts/daily.md` for the authoritative rules.
+Section `id`s should stay consistent day to day (e.g. always `centralian-news`, `ai-news`, `apple-news`, `battery`; plus the seasonal `tax-statements`, which appears only 15 Jul–15 Aug) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day. The three news sections are always emitted when Fastmail succeeded (`fastmail_status: ok`) — an empty one carries a "Nothing newsworthy today." line rather than being dropped — and `battery` is always emitted regardless of status; everything else appears only when it has content. See `prompts/daily.md` for the authoritative rules.
 
 ## Data source scripts (`scripts/`)
 

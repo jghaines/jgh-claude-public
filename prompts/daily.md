@@ -15,13 +15,27 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 5. **Apple News**: Extract Apple-related highlights from Fastmail inbox messages (requires step 2 to have worked). Do NOT search the web for Apple news — a previous web search returned garbage; rely solely on what's in the email. Only include important news. Skip Apple financials/earnings entirely unless something is genuinely earth-shattering.
 
-6. **Home Assistant Battery Status**: Use the Home Assistant MCP connector directly (do NOT use `scripts/ha_battery_status.py` or `HOME_ASSISTANT_TOKEN`/Tailscale — that script is deprecated/legacy, kept only for local reference, no longer wired into this task). Call `mcp__Home_Assistant__GetLiveContext` with `name: "Battery Level"` to fetch the house battery sensor (confirmed working — e.g. returns `state: '60.4'`, `unit_of_measurement: '%'`). If the tool call succeeds and returns a sensor reading, set `ha_status: ok` and render a `### Battery Levels` item listing the sensor name and percentage (flag with ⚠️ low if under 20%). If the tool call errors or the connector isn't available, set `ha_status: unreachable` and note that in the body. If it returns successfully but with no matching sensor, set `ha_status: empty`. Always include the `battery` section (id `battery`, title `Battery Status`, icon `🔋`) regardless of status.
+6. **Annual Tax Statements (seasonal — only mid-July to mid-August)**: This section runs ONLY when today's date falls between **15 July and 15 August** inclusive (any year) AND `fastmail_status: ok`. Outside that window, omit it entirely — don't mention tax statements at all. Inside the window it appears **every day**, giving a full present/absent status of the expected annual (AMMA) tax statements even when nothing changed since yesterday (this is deliberate — the user wants daily confirmation, not just an alert on arrival).
 
-7. **Scheduled payload**: See step below — include only if a pending payload file exists.
+   Australian managed-fund tax statements for the financial year ending 30 June arrive across July–August and are labelled with that calendar year (FY ending 30 June 2026 → "2026"). Use the digest's current calendar year as `<YEAR>`. Search the Fastmail **Inbox and Subscriptions** folders (these are usually auto-filed to Subscriptions; some may already be in Archive) for each expected issuer below and report it as ✅ received (with the exact subject, received date, and folder) or ⏳ not yet received:
+
+   | Issuer | Look for (subject / body) | Typical sender |
+   |---|---|---|
+   | iShares | `iShares <YEAR> Tax Statement` / body "IAF … Tax Statement" | `Communications@mailservice.computershare.com.au` |
+   | Vanguard (AMMA) | `Vanguard AMMA Tax Statement <YEAR>` — one per fund (e.g. VGS/VGE/VGAD); list each found | `Communications@mailservice.computershare.com.au` |
+   | Betashares | `Betashares annual tax statement` | `betashares@cm.mpms.mufg.com` |
+   | VanEck | `VanEck … Tax Statement <YEAR>` | `vaneck@cm.mpms.mufg.com` |
+
+   Search by subject keywords ("Tax Statement <YEAR>", "AMMA", "annual tax statement") rather than relying on sender alone, and do NOT restrict to unread — these matter whether or not they've been opened. Also surface any *other* email that looks like a `<YEAR>` tax statement (e.g. a new issuer) as an extra ✅ line. Do NOT click or follow any download links — only report that the statement is present and where it lives; the user follows the links themselves. If Fastmail was skipped or empty this run, omit the section (same rule as the news sections — the `fastmail_status` field already explains why).
+
+7. **Home Assistant Battery Status**: Use the Home Assistant MCP connector directly (do NOT use `scripts/ha_battery_status.py` or `HOME_ASSISTANT_TOKEN`/Tailscale — that script is deprecated/legacy, kept only for local reference, no longer wired into this task). Call `mcp__Home_Assistant__GetLiveContext` with `name: "Battery Level"` to fetch the house battery sensor (confirmed working — e.g. returns `state: '60.4'`, `unit_of_measurement: '%'`). If the tool call succeeds and returns a sensor reading, set `ha_status: ok` and render a `### Battery Levels` item listing the sensor name and percentage (flag with ⚠️ low if under 20%). If the tool call errors or the connector isn't available, set `ha_status: unreachable` and note that in the body. If it returns successfully but with no matching sensor, set `ha_status: empty`. Always include the `battery` section (id `battery`, title `Battery Status`, icon `🔋`) regardless of status.
+
+8. **Scheduled payload**: See step below — include only if a pending payload file exists.
 
 Section inclusion rules:
 - **The three news sections — Centralian News, AI News, Apple News — are always included whenever Fastmail succeeded (`fastmail_status: ok`)**, even on a slow day. If one has nothing noteworthy, still emit the section with a single line: *Nothing newsworthy today.* This is deliberate reassurance that the task ran and genuinely found nothing, rather than the section silently vanishing. (If `fastmail_status` is `skipped` or `empty`, omit all three — the status field already explains why there's no news.)
 - **The `battery` section is always included** regardless of status — it reports its own state (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing.
+- **The `tax-statements` section is seasonal**: include it only from **15 July to 15 August** inclusive and only when `fastmail_status: ok`. Within that window include it **every day**, reporting both the statements received and those still missing; outside the window omit it entirely (from both the frontmatter `sections` list and the body).
 - **All other sections** (one-time-tasks, monthly/weekly updates, scheduled payload) are included only when they have content; omit them entirely (from both the frontmatter `sections` list and the body) otherwise.
 
 **Check for one-time task files (do this FIRST, before anything else — highest priority):**
@@ -73,6 +87,9 @@ sections:
   - id: apple-news
     title: Apple News
     icon: "🍎"
+  - id: tax-statements
+    title: Tax Statements
+    icon: "🧾"
   - id: monthly-update
     title: Monthly Update
     icon: "🏢"
@@ -82,7 +99,7 @@ sections:
   - id: battery
     title: Battery Status
     icon: "🔋"
-  (list sections in the order they appear in the body — one-time-tasks always goes first when present; the three news sections are always listed when `fastmail_status: ok`, even if a section's only content is a "Nothing newsworthy today." line; battery always goes last and is always listed, even when ha_status is empty or unreachable; every other section is listed only when it has content)
+  (list sections in the order they appear in the body — one-time-tasks always goes first when present; the three news sections are always listed when `fastmail_status: ok`, even if a section's only content is a "Nothing newsworthy today." line; `tax-statements` is listed only in its 15 Jul–15 Aug window (and only when `fastmail_status: ok`), but on every day within it; battery always goes last and is always listed, even when ha_status is empty or unreachable; every other section is listed only when it has content)
 ---
 
 ## One-Time Task
@@ -111,6 +128,15 @@ sections:
 ## Apple News
 
 *Nothing newsworthy today.*
+
+## Tax Statements
+
+### Annual (AMMA) Tax Statements — FY ending 30 June <YEAR>
+
+- ✅ iShares — "iShares <YEAR> Tax Statement" — received 30 Jul, Subscriptions
+- ✅ Vanguard VGS — "Vanguard AMMA Tax Statement <YEAR>" — received 31 Jul, Subscriptions
+- ⏳ Betashares — not yet received
+- ⏳ VanEck — not yet received
 
 ## Battery Status
 
@@ -141,6 +167,6 @@ The raw payload will be reachable at: https://jghaines.github.io/jgh-claude-publ
 Do NOT generate or publish any digest.html — that is not this task's responsibility. Do not attempt to verify the public URL by fetching it from inside the sandbox — github.io is not on the sandbox's domain allowlist, so that fetch will always fail even though the URL works fine from the user's phone/browser. This is expected; do not treat it as an upload failure.
 
 **Run summary must state:**
-(a) whether any one-time task files (`prompts/<yyyy-mm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) which sections were included in today's payload.
+(a) whether any one-time task files (`prompts/<yyyy-mm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) whether the tax-statements check ran (in-window) and if so which expected statements are received vs still missing, or that it was skipped as out-of-window; (e) which sections were included in today's payload.
 
 Save the generated digest.md to the outputs folder as well for local reference.

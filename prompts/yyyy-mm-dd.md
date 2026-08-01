@@ -3,7 +3,7 @@
 Generate a morning digest payload for the user. This task produces ONLY a structured markdown+frontmatter data file (`digest.md`) at the repo root — it does NOT generate any HTML. The user maintains their own HTML/JS front-end separately that fetches and renders this payload (with its own theme handling, layout, etc.). Your job is strictly content: gather the data, write it in the schema below, and publish it.
 
 **Data sources:**
-1. **One-Time Task**: See "Check for one-time task files" step below — include as a priority section at the very top of the digest, only if any date-stamped one-time prompt files are found.
+1. **Folded-in content files**: See "Fold in matched content files" step below. Matched **one-time** dated files render as a priority `one-time-tasks` section at the very top of the digest; matched **seasonal** files (e.g. the July/August tax-statement watch in `prompts/yyyy-07.md` / `yyyy-08.md`) render as their own sections. Included only when something matched today.
 
 2. **Fastmail Summary**: Load the Fastmail MCP tools with ToolSearch (try query "fastmail", then "email inbox" if the first returns nothing). If tools load, use them to check the Inbox and Subscriptions folders for unread messages since yesterday, and set `fastmail_status: ok` (or `empty` if there were genuinely no unread messages).
 
@@ -15,44 +15,33 @@ Generate a morning digest payload for the user. This task produces ONLY a struct
 
 5. **Apple News**: Extract Apple-related highlights from Fastmail inbox messages (requires step 2 to have worked). Do NOT search the web for Apple news — a previous web search returned garbage; rely solely on what's in the email. Only include important news. Skip Apple financials/earnings entirely unless something is genuinely earth-shattering.
 
-6. **Annual Tax Statements (seasonal — only mid-July to mid-August)**: This section runs ONLY when today's date falls between **15 July and 15 August** inclusive (any year) AND `fastmail_status: ok`. Outside that window, omit it entirely — don't mention tax statements at all. Inside the window it appears **every day**, giving a full present/absent status of the expected annual (AMMA) tax statements even when nothing changed since yesterday (this is deliberate — the user wants daily confirmation, not just an alert on arrival).
+6. **Home Assistant Battery Status**: Use the Home Assistant MCP connector directly (do NOT use `scripts/ha_battery_status.py` or `HOME_ASSISTANT_TOKEN`/Tailscale — that script is deprecated/legacy, kept only for local reference, no longer wired into this task). Call `mcp__Home_Assistant__GetLiveContext` with `name: "Battery Level"` to fetch the house battery sensor (confirmed working — e.g. returns `state: '60.4'`, `unit_of_measurement: '%'`). If the tool call succeeds and returns a sensor reading, set `ha_status: ok` and render a `### Battery Levels` item listing the sensor name and percentage (flag with ⚠️ low if under 20%). If the tool call errors or the connector isn't available, **retry up to 2 more times, waiting ~15 seconds between attempts** — the fault was diagnosed as an occasional transient blip on the Mac→HA path at run time (both ends were provably healthy; see AGENTS.md "Home Assistant connectivity"), and unlike Fastmail this connector is already authorized, so a retry cannot hang on a permission prompt. Only after all attempts fail, set `ha_status: unreachable` and note that in the body. If it returns successfully but with no matching sensor, set `ha_status: empty`. Always include the `battery` section (id `battery`, title `Battery Status`, icon `🔋`) regardless of status.
 
-   Australian managed-fund tax statements for the financial year ending 30 June arrive across July–August and are labelled with that calendar year (FY ending 30 June 2026 → "2026"). Use the digest's current calendar year as `<YEAR>`. Search the Fastmail **Inbox and Subscriptions** folders (these are usually auto-filed to Subscriptions; some may already be in Archive) for each expected issuer below and report it as ✅ received (with the exact subject, received date, and folder) or ⏳ not yet received:
-
-   | Issuer | Look for (subject / body) | Typical sender |
-   |---|---|---|
-   | iShares | `iShares <YEAR> Tax Statement` / body "IAF … Tax Statement" | `Communications@mailservice.computershare.com.au` |
-   | Vanguard (AMMA) | `Vanguard AMMA Tax Statement <YEAR>` — one per fund (e.g. VGS/VGE/VGAD); list each found | `Communications@mailservice.computershare.com.au` |
-   | Betashares | `Betashares annual tax statement` | `betashares@cm.mpms.mufg.com` |
-   | VanEck | `VanEck … Tax Statement <YEAR>` | `vaneck@cm.mpms.mufg.com` |
-
-   Search by subject keywords ("Tax Statement <YEAR>", "AMMA", "annual tax statement") rather than relying on sender alone, and do NOT restrict to unread — these matter whether or not they've been opened. Also surface any *other* email that looks like a `<YEAR>` tax statement (e.g. a new issuer) as an extra ✅ line. Do NOT click or follow any download links — only report that the statement is present and where it lives; the user follows the links themselves. If Fastmail was skipped or empty this run, omit the section (same rule as the news sections — the `fastmail_status` field already explains why).
-
-7. **Home Assistant Battery Status**: Use the Home Assistant MCP connector directly (do NOT use `scripts/ha_battery_status.py` or `HOME_ASSISTANT_TOKEN`/Tailscale — that script is deprecated/legacy, kept only for local reference, no longer wired into this task). Call `mcp__Home_Assistant__GetLiveContext` with `name: "Battery Level"` to fetch the house battery sensor (confirmed working — e.g. returns `state: '60.4'`, `unit_of_measurement: '%'`). If the tool call succeeds and returns a sensor reading, set `ha_status: ok` and render a `### Battery Levels` item listing the sensor name and percentage (flag with ⚠️ low if under 20%). If the tool call errors or the connector isn't available, **retry up to 2 more times, waiting ~15 seconds between attempts** — the fault was diagnosed as an occasional transient blip on the Mac→HA path at run time (both ends were provably healthy; see AGENTS.md "Home Assistant connectivity"), and unlike Fastmail this connector is already authorized, so a retry cannot hang on a permission prompt. Only after all attempts fail, set `ha_status: unreachable` and note that in the body. If it returns successfully but with no matching sensor, set `ha_status: empty`. Always include the `battery` section (id `battery`, title `Battery Status`, icon `🔋`) regardless of status.
-
-8. **Scheduled payload**: See step below — include only if a pending payload file exists.
+7. **Scheduled payload**: See step below — include only if a pending payload file exists.
 
 Section inclusion rules:
 - **The three news sections — Centralian News, AI News, Apple News — are always included whenever Fastmail succeeded (`fastmail_status: ok`)**, even on a slow day. If one has nothing noteworthy, still emit the section with a single line: *Nothing newsworthy today.* This is deliberate reassurance that the task ran and genuinely found nothing, rather than the section silently vanishing. (If `fastmail_status` is `skipped` or `empty`, omit all three — the status field already explains why there's no news.)
 - **The `battery` section is always included** regardless of status — it reports its own state (including "unreachable") rather than being silently skipped, so a missing battery reading is visible in the digest instead of just disappearing.
-- **The `tax-statements` section is seasonal**: include it only from **15 July to 15 August** inclusive and only when `fastmail_status: ok`. Within that window include it **every day**, reporting both the statements received and those still missing; outside the window omit it entirely (from both the frontmatter `sections` list and the body).
-- **All other sections** (one-time-tasks, monthly/weekly updates, scheduled payload) are included only when they have content; omit them entirely (from both the frontmatter `sections` list and the body) otherwise.
+- **The `tax-statements` section is driven by the seasonal fold-in files** (`prompts/yyyy-07.md` / `yyyy-08.md`): it appears exactly on the days those files match — every day in July and August — because the matcher surfaces them; there is no date arithmetic to do here. The file itself carries the present/absent checklist logic. Outside July/August the files don't match, so the section is simply absent.
+- **All other sections** (one-time-tasks, seasonal fold-ins, monthly/weekly updates, scheduled payload) are included only when they have content / matched today; omit them entirely (from both the frontmatter `sections` list and the body) otherwise.
 
-**Check for one-time task files (do this FIRST, before anything else — highest priority):**
-These are ad hoc, one-time task instructions the user wrote for a specific date, one per file named `prompts/<yyyy-mm-dd>.md` (plain numeric ISO date, e.g. `prompts/2026-07-23.md`) — unlike `daily.md`/`weekly.md`/`monthly.md`, which are recurring and never deleted. The date-matching logic lives in a script so it doesn't have to be re-derived each run; from the repo directory run:
+**Fold in matched content files (do this FIRST, before anything else — highest priority):**
+The `prompts/` directory encodes each file's schedule in its **filename** (see AGENTS.md "Prompt scheduling by filename"). A single matcher decides what runs today; from the repo directory run:
 ```
 python3 scripts/find_dated_prompts.py --contents
 ```
-It prints a JSON array of the matching files (each with `date`, `path`, and full `contents`), already filtered and sorted for you: it includes any file dated today or earlier — so a file is still picked up on the next run however many days late — ignores future-dated files, and returns them oldest date first. An empty array `[]` means no files match, which is the normal case for most days; skip this whole step when that happens. (Run without `--contents` if you only want the paths; pass `--today YYYY-MM-DD` only for testing.)
+It prints a JSON array of the files matching today, each with `path`, `pattern`, `role`, `recurring`, and full `contents`. This digest generator only folds in the **content** roles — `one-time`, `seasonal`, and `annual`. **Ignore** entries with role `daily` (that's this file), `weekly`, or `monthly`: those are standalone runners the dispatcher executes separately, not content to fold here. An empty array — or one with only runner roles — means there's nothing to fold, the normal case most days. (Pass `--today YYYY-MM-DD` only for testing; `--role one-time` etc. to filter.)
 
-For each file in that JSON array, in the order given (oldest date first):
-1. Take the file's `contents` from the JSON and execute/evaluate whatever it asks for — these are arbitrary, one-off instructions (a reminder, a lookup, a task to perform), not a fixed schema. Use judgment.
-2. Fold the result into a section with id `one-time-tasks`, title `One-Time Task` (or a more specific title drawn from the file's own content if it has one), icon `⚡`. This section must be listed FIRST in the frontmatter `sections` list and appear FIRST in the body — ahead of Fastmail/AI News/Apple News/scheduled-payload sections. If multiple dated files matched, include each as its own `###` item within this single section, oldest first.
-3. After folding its result into the digest, delete the file so it never runs again:
+For each content entry, in the order given:
+1. Take the file's `contents` and execute/evaluate whatever it asks for — arbitrary instructions (a reminder, a lookup, a Fastmail check), not a fixed schema. Use judgment, and honour any rendering directions the file gives (e.g. the tax-statement files specify their own section id/title/icon).
+2. Fold the result in:
+   - **`one-time` / `annual` (and any generic dated file)** → a section with id `one-time-tasks`, title `One-Time Task` (or a more specific title from the file's own content), icon `⚡`. This section is listed FIRST in the frontmatter and appears FIRST in the body. Multiple such files each become their own `###` item within this one section, oldest first.
+   - **`seasonal`** → its **own** section, using the id/title/icon the file declares (e.g. `tax-statements` / `Tax Statements` / `🧾`), placed after the news sections.
+3. **Deletion rule — only for one-time files.** After folding in a file whose `recurring` is `false` (a fully-literal one-off date), delete it so it never runs again:
    ```
    git rm prompts/<the-matched-filename>.md
    ```
-   Stage this alongside the digest.md commit below (or as its own commit) — either is fine, just make sure everything is pushed together in one `git push` at the end.
+   **Never delete a file with `recurring: true`** (any `yyyy`/`mm`/`dd` wildcard or weekday pattern, including the seasonal `yyyy-07.md` / `yyyy-08.md`) — those are meant to fire again and must be left in place. Stage any `git rm` alongside the digest.md commit so it's pushed in one go.
 
 **Check for Scheduled payload (do this next, before generating the digest):**
 Less frequent scheduled tasks write their findings to `payloads/*-pending.md` in this repo. From the repo directory (already pulled by the bootstrap step):
@@ -99,7 +88,7 @@ sections:
   - id: battery
     title: Battery Status
     icon: "🔋"
-  (list sections in the order they appear in the body — one-time-tasks always goes first when present; the three news sections are always listed when `fastmail_status: ok`, even if a section's only content is a "Nothing newsworthy today." line; `tax-statements` is listed only in its 15 Jul–15 Aug window (and only when `fastmail_status: ok`), but on every day within it; battery always goes last and is always listed, even when ha_status is empty or unreachable; every other section is listed only when it has content)
+  (list sections in the order they appear in the body — one-time-tasks always goes first when present; the three news sections are always listed when `fastmail_status: ok`, even if a section's only content is a "Nothing newsworthy today." line; `tax-statements` is listed only on the days its seasonal file matches (every day in July/August), folded in per the step above; battery always goes last and is always listed, even when ha_status is empty or unreachable; every other section is listed only when it has content)
 ---
 
 ## One-Time Task
@@ -167,6 +156,6 @@ The raw payload will be reachable at: https://jghaines.github.io/jgh-claude-publ
 Do NOT generate or publish any digest.html — that is not this task's responsibility. Do not attempt to verify the public URL by fetching it from inside the sandbox — github.io is not on the sandbox's domain allowlist, so that fetch will always fail even though the URL works fine from the user's phone/browser. This is expected; do not treat it as an upload failure.
 
 **Run summary must state:**
-(a) whether any one-time task files (`prompts/<yyyy-mm-dd>.md`) were found, and if so which ones and whether they were deleted after use; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) whether the tax-statements check ran (in-window) and if so which expected statements are received vs still missing, or that it was skipped as out-of-window; (e) which sections were included in today's payload.
+(a) which content files matched today (pattern + role), which were folded in, and which one-time files were deleted (recurring:false only) vs left in place; (b) whether the Fastmail section succeeded, was empty, or was skipped (and why); (c) whether the Home Assistant battery check succeeded, found no sensors, or was unreachable; (d) if a seasonal tax-statement file matched, which expected statements are received vs still missing; (e) which sections were included in today's payload.
 
 Save the generated digest.md to the outputs folder as well for local reference.

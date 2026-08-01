@@ -4,7 +4,7 @@ Steam Machine (AU store) availability/price checker.
 
 Stdlib-only by design (urllib, json) so it runs in any sandbox without a pip
 install step. Intended to be invoked by the weekly-digest-recap scheduled task
-(see prompts/weekly.md), which then commits whatever this script writes to
+(see prompts/yyyy-mm-dd-sun.md), which then commits whatever this script writes to
 payloads/weekly-pending.md.
 
 Data source: this reads Steam's store API directly rather than scraping
@@ -46,7 +46,7 @@ GET_HARDWARE_URL = "https://api.steampowered.com/IStoreBrowseService/GetHardware
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CACHE_FILE = REPO_ROOT / "scripts" / ".steam_cache.json"
-# Matches the repo's payloads/<task>-pending.md convention (see prompts/daily.md,
+# Matches the repo's payloads/<task>-pending.md convention (see prompts/yyyy-mm-dd.md,
 # which globs payloads/*-pending.md) - this is the weekly task's payload.
 PAYLOAD_FILE = REPO_ROOT / "payloads" / "weekly-pending.md"
 

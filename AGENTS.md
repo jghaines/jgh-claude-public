@@ -13,17 +13,36 @@ Scheduled tasks only ever touch the content layer (`digest.md`, `digest-weekly.m
 
 ## The scheduled tasks
 
-Three Claude scheduled tasks drive this repo:
+**One** Claude scheduled task drives this repo. It runs every morning (~5:45am) and executes `prompts/_dispatch.md`, the dispatcher, which decides what runs *today* from the prompt filenames (see "Prompt scheduling by filename" below). This replaced the earlier three separate tasks (`daily-morning-digest`, `weekly-digest-recap`, `monthly-b8-mcp-search`), whose cadences are now expressed as filenames rather than as separate task registrations.
 
-| Task ID | Schedule | Reads | Writes |
-|---|---|---|---|
-| `daily-morning-digest` | 5:45am daily | `payloads/b8-mcp-pending.md` (if present) | `digest.md` |
-| `weekly-digest-recap` | Mondays 6:00am | — | `digest-weekly.md` |
-| `monthly-b8-mcp-search` | 1st of month | — | `payloads/b8-mcp-pending.md` |
+| Runs | Pattern file | Writes |
+|---|---|---|
+| every day | `prompts/yyyy-mm-dd.md` | `digest.md` |
+| Sundays | `prompts/yyyy-mm-dd-sun.md` | `payloads/weekly-pending.md` (steam check) |
+| 1st of month | `prompts/yyyy-mm-01.md` | `payloads/*-pending.md` (b8/MCP search) |
+| Jul & Aug | `prompts/yyyy-07.md`, `prompts/yyyy-08.md` | folded into `digest.md` as the `tax-statements` section |
+| one-off dates | `prompts/2026-12-26.md` etc. | folded into `digest.md`, then deleted |
 
-Each scheduled task's actual stored prompt (in `~/Claude/Scheduled/<task-id>/SKILL.md`, outside this repo, not version-controlled) is intentionally a **thin bootstrap**: shallow-clone this repo to a fresh temp dir, verify the checkout, then read and execute the corresponding file in `prompts/`. This means the real logic lives here in git — editable, diffable, revertable — and the scheduled task config itself rarely needs to change.
+The scheduled task's stored prompt (in `~/Claude/Scheduled/<task-id>/SKILL.md`, outside this repo, not version-controlled) is a **thin bootstrap**: shallow-clone this repo to a fresh temp dir, verify the checkout, then read and execute `prompts/_dispatch.md`. The real logic lives here in git — editable, diffable, revertable — so the task config itself rarely changes.
 
-**Don't edit the scheduled task prompts directly for logic changes.** Edit `prompts/daily.md`, `prompts/weekly.md`, or `prompts/monthly.md` instead, commit, and push. The bootstrap will pick up the change on the next run automatically.
+**Don't edit the bootstrap for logic changes.** Edit the relevant file in `prompts/` (or `_dispatch.md`), commit, and push; the bootstrap picks it up on the next run.
+
+### Prompt scheduling by filename
+
+Each file in `prompts/` encodes *when it runs* in its name, matched by `scripts/find_dated_prompts.py`:
+
+```
+<year>-<month>[-<day>][-<dow>].md
+```
+
+- Each of `year` / `month` / `day` is either a literal (`2026`, `07`, `26`) or a wildcard placeholder (`yyyy`, `mm`, `dd`). A trailing day may be omitted (treated as wildcard).
+- An optional trailing weekday (`mon`..`sun`) constrains to that weekday.
+- The matcher classifies each file by **role** — `daily` (`yyyy-mm-dd`), `weekly` (has a `-sun` etc. suffix), `monthly` (literal day, wildcard month, e.g. `yyyy-mm-01`), `seasonal` (literal month, wildcard day, e.g. `yyyy-07`), `annual` (wildcard year, literal month+day), or `one-time` (a fully-literal date) — and a `recurring` flag (`false` only for one-time literal dates).
+- **Matching:** a one-time literal date matches today *or any earlier* day (catch-up if a run was missed); every recurring pattern matches only when today fits its fixed components exactly.
+- **Deletion:** only `recurring: false` (one-time) files are ever `git rm`ed after use. Every pattern file — including `yyyy-07.md` / `yyyy-08.md` — is left in place so it fires again.
+- Files whose leading token isn't a year, or whose literals aren't a real date, are ignored (so `_dispatch.md`, `README`, `yyyy-13.md`, `2026-02-30.md` never match).
+
+To add recurring behaviour, `touch prompts/<pattern>.md` with the pattern you want and put the instructions inside; no task-config change is needed. `daily`/`weekly`/`monthly` files are standalone runners executed by the dispatcher; `seasonal`/`annual`/`one-time` files are *content* the daily generator folds into `digest.md`.
 
 ## Execution environment (read this first)
 
@@ -62,7 +81,7 @@ git remote set-url --push origin https://jghaines:<PAT>@github.com/jghaines/jgh-
 Notes for agents:
 
 - The repo is public, so **cloning needs no credentials**. The PAT is only applied to the push URL, via `set-url --push`, which leaves the existing `git push origin HEAD:main` lines in `prompts/*.md` working unchanged.
-- Use `mktemp -d`. Never a fixed `/tmp` path, and never `rm -rf` a previous clone first — a leftover directory owned by another uid makes the delete fail, the clone silently not happen, and the run proceed on stale instructions. This exact failure caused the 2026-07-25 run to execute a superseded copy of `prompts/daily.md`.
+- Use `mktemp -d`. Never a fixed `/tmp` path, and never `rm -rf` a previous clone first — a leftover directory owned by another uid makes the delete fail, the clone silently not happen, and the run proceed on stale instructions. This exact failure caused the 2026-07-25 run to execute a superseded copy of the daily prompt.
 - **All repo file access goes through bash**, not the Read/Write/Edit tools. Those tools cannot see `$REPO`.
 - Pushing from a shallow clone is fine: the parent commit is already on the remote, so this is the standard `fetch-depth: 1` CI pattern.
 
@@ -90,20 +109,20 @@ sections:
 1-3 sentence summary. [Read more](https://www.wired.com/story/…) [wired.com]
 ```
 
-Section `id`s should stay consistent day to day (e.g. always `centralian-news`, `ai-news`, `apple-news`, `battery`; plus the seasonal `tax-statements`, which appears only 15 Jul–15 Aug) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day. The three news sections are always emitted when Fastmail succeeded (`fastmail_status: ok`) — an empty one carries a "Nothing newsworthy today." line rather than being dropped — and `battery` is always emitted regardless of status; everything else appears only when it has content. See `prompts/daily.md` for the authoritative rules.
+Section `id`s should stay consistent day to day (e.g. always `centralian-news`, `ai-news`, `apple-news`, `battery`; plus the seasonal `tax-statements`, which appears every day in July and August) so the front-end renderer can rely on stable ids for known categories, even though which sections appear varies by day. The three news sections are always emitted when Fastmail succeeded (`fastmail_status: ok`) — an empty one carries a "Nothing newsworthy today." line rather than being dropped — and `battery` is always emitted regardless of status; everything else appears only when it has content. See `prompts/yyyy-mm-dd.md` for the authoritative rules.
 
 ## Data source scripts (`scripts/`)
 
 Stdlib-only Python helpers that scheduled tasks shell out to, instead of the agent doing the fetch/parse itself inline. Keeping these as scripts (not inline instructions) means the logic is testable and diffable, and the sandbox never needs a `pip install` step.
 
-- `scripts/steam_machine_check.py` — run by `weekly-digest-recap`, writes to `payloads/steam-machine-pending.md`.
-- `scripts/ha_battery_status.py` — run directly by `daily-morning-digest` (see `prompts/daily.md`). Queries the Home Assistant REST API (`/api/states`) for battery-class sensors and prints either JSON or a digest-ready markdown block (`--markdown`).
+- `scripts/steam_machine_check.py` — run by the weekly runner (`prompts/yyyy-mm-dd-sun.md`), writes to `payloads/weekly-pending.md`.
+- `scripts/ha_battery_status.py` — deprecated (see below), was run by the daily prompt. Queries the Home Assistant REST API (`/api/states`) for battery-class sensors and prints either JSON or a digest-ready markdown block (`--markdown`).
 
 ### Home Assistant connectivity
 
 Home Assistant lives at `http://homeassistant.local:8123` on the home LAN. The bash sandbox has **no route to that network and cannot resolve the hostname** — confirmed by direct test, and no amount of allowlisting changes it, because this is a routing problem rather than a permissions one.
 
-The fix already applied: `prompts/daily.md`'s battery step calls the `mcp__Home_Assistant__GetLiveContext` MCP tool instead of shelling out. That call is serviced by `mcp-proxy` running on the Mac, which is on the LAN, so it works (verified — returns e.g. `state: '60.4'`, `unit_of_measurement: '%'`).
+The fix already applied: `prompts/yyyy-mm-dd.md`'s battery step calls the `mcp__Home_Assistant__GetLiveContext` MCP tool instead of shelling out. That call is serviced by `mcp-proxy` running on the Mac, which is on the LAN, so it works (verified — returns e.g. `state: '60.4'`, `unit_of_measurement: '%'`).
 
 **Diagnosing `ha_status: unreachable` — do NOT blame the Mac being asleep.** These are Claude Scheduled Tasks; they execute on the Mac via the Claude runtime. A run that produced a digest and pushed it *at all* is proof the Mac was awake and the runtime was up — otherwise nothing would have run. So `unreachable` is never evidence the machine slept. It's a separate, narrower failure: the Home Assistant MCP connector specifically wasn't available to that run. Remote/hosted connectors and local stdio connectors are attached independently, so `fastmail_status: ok` alongside `ha_status: unreachable` in the *same* run is the signature of exactly this — the HA connector path failed for that run while the rest of the task was fine. Investigate the connector, not the machine's power state.
 
@@ -111,14 +130,14 @@ The fix already applied: `prompts/daily.md`'s battery step calls the `mcp__Home_
 
 Three-layer fix (all applied):
 1. **Endpoint-fallback launcher** — the connector `command` in `claude_desktop_config.json` now points at `/Users/jasonhaines/Claude/ha-mcp-proxy.sh` (source of truth: `scripts/ha-mcp-proxy.sh` in this repo). It probes endpoints in order of robustness and `exec`s `mcp-proxy` against the first that answers: **DHCP-pinned LAN IP `192.168.0.114` (no name resolution at all) → Tailscale MagicDNS `homeassistant.tail1f72e6.ts.net` → mDNS `.local`**. IP-first removes the mDNS root cause for the common case. Editing the launcher requires re-copying it to the install path and **restarting the Claude desktop app** to take effect.
-2. **Bounded retry** in the battery step of `prompts/daily.md` — retry `GetLiveContext` up to 2 more times, ~15s apart, before recording `unreachable`. Safe here (the connector is already authorized, so no Fastmail-style permission-prompt hang risk).
+2. **Bounded retry** in the battery step of `prompts/yyyy-mm-dd.md` — retry `GetLiveContext` up to 2 more times, ~15s apart, before recording `unreachable`. Safe here (the connector is already authorized, so no Fastmail-style permission-prompt hang risk).
 3. The `mcp-proxy` token still lives in the connector's `env.API_ACCESS_TOKEN`; the launcher inherits it via `exec`.
 
 `scripts/ha_battery_status.py` is **deprecated** and no longer wired into any task. It is kept only as a local-machine reference. The previously documented plan of setting `HOME_ASSISTANT_URL` / `HOME_ASSISTANT_TOKEN` "in the scheduled task's environment" has been removed: there is no such mechanism. The sandbox receives no environment variables (`env` shows only `PATH`), so that approach cannot work regardless of Tailscale. If you ever do want direct HTTP access from the sandbox, you would need HA exposed at a real public hostname *and* that hostname allowlisted *and* the token delivered by some means that does not exist yet — the MCP route is strictly simpler.
 
 ## The payload queue (`payloads/b8-mcp-pending.md`)
 
-`monthly-b8-mcp-search` writes findings here once a month. `daily-morning-digest` is responsible for consuming it: read it, fold it into a `b8-mcp-update` section in that day's `digest.md`, then `git rm` it so it isn't shown again. If the file is still present when the monthly task runs again, that means the daily task hasn't picked it up yet — the monthly task overwrites it anyway with the freshest findings; this is expected, not a bug.
+The monthly runner (`prompts/yyyy-mm-01.md`) writes findings here on the 1st. The daily generator (`prompts/yyyy-mm-dd.md`) consumes it: read it, fold it into a `b8-mcp-update` section in that day's `digest.md`, then `git rm` it so it isn't shown again. Under the unified dispatcher the monthly runner and the daily generator fire in the **same** run on the 1st (monthly first — see `_dispatch.md`), so the payload is now usually consumed the same morning rather than a day later. If a payload is still present when the monthly runner fires again, the daily generator hadn't picked it up yet — the monthly runner overwrites it with the freshest findings anyway; this is expected, not a bug.
 
 ## Publishing
 
@@ -132,4 +151,4 @@ Multiple writers push to `main` independently: the scheduled tasks (daily/weekly
 
 ## If you're an agent picking this repo up for the first time
 
-Read `prompts/daily.md`, `prompts/weekly.md`, and `prompts/monthly.md` before touching anything — they're the actual current behavior. This AGENTS.md file describes the shape of the system; those files describe what actually runs.
+Read `prompts/_dispatch.md` first (the entry point), then the pattern files it fans out to — `prompts/yyyy-mm-dd.md` (daily digest), `prompts/yyyy-mm-dd-sun.md` (weekly), `prompts/yyyy-mm-01.md` (monthly), and the seasonal `prompts/yyyy-07.md` / `prompts/yyyy-08.md` — before touching anything. They're the actual current behavior. This AGENTS.md file describes the shape of the system; those files describe what actually runs. See "Prompt scheduling by filename" above for how filenames map to schedules.

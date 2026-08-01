@@ -35,5 +35,5 @@ do
 done
 
 # Nothing answered the probe. Still start against .local so the connector comes up at all
-# and the per-call retry in prompts/daily.md gets its chance, rather than failing to launch.
+# and the per-call retry in prompts/yyyy-mm-dd.md gets its chance, rather than failing to launch.
 exec "$MCP_PROXY" --transport=streamablehttp --stateless "http://homeassistant.local:8123/api/mcp"

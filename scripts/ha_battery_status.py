@@ -6,7 +6,7 @@ Stdlib-only by design (urllib, json) so it runs in any sandbox without a pip
 install step - matches the convention in scripts/steam_machine_check.py.
 
 Intended to be invoked directly by the daily-morning-digest scheduled task
-(see prompts/daily.md), which folds the markdown output into that day's
+(see prompts/yyyy-mm-dd.md), which folds the markdown output into that day's
 digest.md. Unlike steam_machine_check.py, this does NOT go through the
 payloads/ queue - battery levels are a daily-fresh thing, not a monthly one,
 so there's no need to stage it for a later task to pick up.

@@ -1,6 +1,6 @@
 ---
-date: 2026-08-01
-generated_at: 2026-08-01T05:47:13+09:30
+date: 2026-08-02
+generated_at: 2026-08-02T07:35:12+09:30
 fastmail_status: ok
 fastmail_note: ""
 ha_status: ok
@@ -14,8 +14,11 @@ sections:
   - id: apple-news
     title: Apple News
     icon: "🍎"
-  - id: monthly-update
-    title: Monthly Update
+  - id: tax-statements
+    title: Tax Statements
+    icon: "🧾"
+  - id: weekly-update
+    title: Weekly Update
     icon: "🏢"
   - id: battery
     title: Battery Status
@@ -34,23 +37,26 @@ sections:
 
 *Nothing newsworthy today.*
 
-## Monthly Update
+## Tax Statements
 
-### B8 Competitors in Australia
+### Annual (AMMA) Tax Statements — FY ending 30 June 2026
 
-Denza confirmed the B5 and B8 PHEV SUVs for Australia, arriving from November 2026, positioned as rivals to the Toyota Prado and Toyota LandCruiser 300 Series/Lexus LX. [Read more](https://www.chasingcars.com.au/news/car-industry/denza-b5-and-b8-2026-confirmed-for-australia-byds-phev-powered-prado-rivals-due-to-arrive-from-november/) [chasingcars.com.au]
+- ⏳ iShares — not yet received
+- ✅ Vanguard VGS — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Archive
+- ✅ Vanguard VGE — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Subscriptions
+- ✅ Vanguard VGAD — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Subscriptions
+- ✅ Betashares — "Betashares annual tax statement now available" — received 29 Jul, Subscriptions
+- ✅ VanEck — "VanEck Investments Limited Tax Statement 2026" — received 29 Jul, Subscriptions
 
-GWM's Wey V9X large luxury SUV is on the cards for Australia, shaping up as serious competition for the Denza B8 4WD in the upper-large SUV segment. [Read more](https://www.carsguide.com.au/car-news/denza-b8-4wd-has-some-serious-competition-as-gwms-wey-v9x-big-luxury-suv-on-the-cards-for) [carsguide.com.au]
+## Weekly Update
 
-### New MCPs
+### Steam Machine (AU store) availability check
 
-The MCP 2026-07-28 spec is now live, moving Model Context Protocol to a stateless core, standardizing extensions (MCP Apps, Tasks), hardening OAuth 2.0/OIDC authorization, and adding MCP Tunnels for private-network connections without public endpoints. Support is rolling out across Claude products. [Read more](https://claude.com/blog/bringing-mcp-2026-07-28-to-claude) [claude.com]
-
-Meta shipped a Developer Tools MCP server on June 30, letting AI coding agents query Meta's developer platform for API discovery, error troubleshooting, app health, and compliance deadlines — separate from Meta's existing Ads MCP. [Read more](https://commonthreadco.com/blogs/coachs-corner/meta-ai-mcp-cli-ads-connectors-ecommerce) [commonthreadco.com]
+The weekly checker script couldn't reach Steam's store API this run (sandbox network/tunnel error), so no fresh availability or price data is available this week. No prior cached data exists yet either. The check will retry next week.
 
 ## Battery Status
 
 ### Battery Levels
-*2026 August 01 Saturday 05:47*
+*2026 August 02 Sunday 07:35*
 
-- Battery Level: 19% ⚠️ low
+- Battery Level: 56.2%

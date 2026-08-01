@@ -36,11 +36,11 @@ In the repo directory (already pulled by the bootstrap step):
 ```
 mkdir -p payloads
 # write the markdown content above to payloads/b8-mcp-pending.md, OVERWRITING any existing file
-git add payloads/monthly.md
+git add payloads/b8-mcp-pending.md
 git commit -m "Monthly payload $(date +%Y-%m-%d)"
 git push origin HEAD:main
 ```
 
-Note: `payloads/monthly-pending.md` is a queue of exactly one pending item — this task always overwrites it. The daily-morning-digest task is responsible for consuming (reading, folding into a digest, then deleting) this file, so if it's still present when this task runs again next month, it means the daily task hasn't picked it up yet; overwriting with the newest findings is still the correct behavior.
+Note: `payloads/b8-mcp-pending.md` is a queue of exactly one pending item — this task always overwrites it. The daily-morning-digest task is responsible for consuming (reading, folding into a digest, then deleting) this file, so if it's still present when this task runs again next month, it means the daily task hasn't picked it up yet; overwriting with the newest findings is still the correct behavior.
 
 **Run summary must state:** which topics had noteworthy findings, if any.

@@ -1,6 +1,6 @@
 ---
-date: 2026-08-04
-generated_at: 2026-08-04T05:47:00+09:30
+date: 2026-08-05
+generated_at: 2026-08-05T05:47:20+09:30
 fastmail_status: ok
 fastmail_note: ""
 ha_status: ok
@@ -24,40 +24,38 @@ sections:
 
 ## Centralian News
 
-*Nothing newsworthy today.*
+*Nothing newsworthy today — no Centralian Today edition landed in this run's window. The newsletter typically arrives in the evening (~6:30pm ACST), so an edition sent yesterday evening will show up in tomorrow's digest instead.*
 
 ## AI News
 
-### Self-sustaining AI "worm" demonstrated using open-weight LLMs
+### AI-Written Code Can Now Forge Crime Lab DNA Evidence Files
 
-Researchers from Toronto, the Vector Institute, Cambridge, and ServiceNow built a proof-of-concept computer worm that runs an open-weight LLM on compromised GPUs to reason about further attacks, achieving roughly 37% end-to-end success across detection, exploitation, and self-replication. [Read more](https://substack.com/redirect/1d2a5b40-9647-48f6-a477-8ee76fe1b893?j=eyJ1IjoiY3c4b3oifQ.fTuoluGT-M98UZeKmIRFUPpeHxDcfy5JpWoM0xBOyI0) [substack.com]
+A flaw disclosed via CISA lets AI-written editing code alter the genetic markers a crime lab's DNA-testing software records, without touching the physical sample or triggering detection in normal review. Thermo Fisher rated it second-highest severity and shipped fixes on July 31, but files written since roughly 1995 have no way to prove they weren't tampered with. [Read more](https://www.wsj.com/tech/cybersecurity/security-flaw-placed-30-years-of-dna-evidence-at-risk-of-hacking-1932775a?st=B68zRX&reflink=desktopwebshare_permalink) [wsj.com]
 
-### OpenAI's unreleased Astra model solves ten decades-old math problems
+### EU AI Act Enforcement Begins — 38-Person Office Can Fine Any Provider
 
-While being tested internally, OpenAI's next model reportedly resolved ten open problems spanning group theory, high-dimensional geometry, and lattice cryptography — some unsolved for over 25 years — at a token cost of about $2,000, with each proof machine-checkable. [Read more](https://openai.com/index/ten-advances-in-mathematics/) [openai.com]
-
-### Senior AI lab figures ask US to help pace frontier development
-
-Cofounders and chief scientists from OpenAI, Anthropic, Google DeepMind, Meta, and others signed a statement asking the US government to support international tools for deliberately pacing automated AI research, citing risk of capability growth outrunning oversight. [Read more](https://substack.com/redirect/b06145de-c7dc-4d76-adc2-5f3d007e3ffa?j=eyJ1IjoiY3c4b3oifQ.fTuoluGT-M98UZeKmIRFUPpeHxDcfy5JpWoM0xBOyI0) [substack.com]
+The EU AI Act became enforceable this week, giving the European Commission's AI Office power to demand technical documentation and run its own model evaluations on any AI system sold in the EU — including US labs like OpenAI and Anthropic. Fines can reach €15 million or 3% of global turnover. [Read more](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai) [digital-strategy.ec.europa.eu]
 
 ## Apple News
 
-*Nothing newsworthy today.*
+### Apple Asks Court to Freeze OpenAI Staff Access Ahead of Trial
+
+Apple is seeking an interim court order barring OpenAI and two former Apple employees — including former hardware chief Tang Yew Tan — from using anything Apple considers confidential, and wants four people deposed within weeks, well ahead of a normal case timeline. The dispute centers on a screen-free AI device OpenAI is reportedly building. OpenAI published a rebuttal post the same night, including emails it says show Apple's own conduct in the matter. [Read more](https://openai.com/index/apple-is-getting-this-wrong/) [openai.com]
 
 ## Tax Statements
 
 ### Annual (AMMA) Tax Statements — FY ending 30 June 2026
 
-- ⏳ iShares — not yet received
 - ✅ Vanguard VGS — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Archive
 - ✅ Vanguard VGE — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Archive
 - ✅ Vanguard VGAD — "Vanguard AMMA Tax Statement 2026" — received 31 Jul, Archive
 - ✅ Betashares — "Betashares annual tax statement now available" — received 29 Jul, Archive
 - ✅ VanEck — "VanEck Investments Limited Tax Statement 2026" — received 29 Jul, Archive
+- ⏳ iShares — not yet received
 
 ## Battery Status
 
 ### Battery Levels
-*2026 August 04 Tuesday 05:47*
+*2026 August 05 Wednesday 05:47*
 
-- Battery Level: 65.2%
+- Battery Level: 45%

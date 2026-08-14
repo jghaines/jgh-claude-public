@@ -1,8 +1,8 @@
 ---
-date: 2026-08-14
-generated_at: 2026-08-14T05:47:30+09:30
+date: 2026-08-15
+generated_at: 2026-08-15T05:47:28+09:30
 fastmail_status: skipped
-fastmail_note: "No Fastmail MCP tools found after two search attempts (queries: 'fastmail', 'email inbox')."
+fastmail_note: "No Fastmail MCP tools loaded after searching \"fastmail\" and \"email inbox\" — connector unavailable this run."
 ha_status: ok
 sections:
   - id: tax-statements
@@ -22,6 +22,6 @@ Fastmail unavailable this run — tax statements not checked.
 ## Battery Status
 
 ### Battery Levels
-*2026 August 14 Friday 05:47*
+*2026 August 15 Saturday 05:47*
 
-- Battery Level: 19% ⚠️ low
+- Battery Level: 34.2%

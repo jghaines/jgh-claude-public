@@ -1,13 +1,10 @@
 ---
-date: 2026-08-16
-generated_at: 2026-08-16T05:47:00+09:30
+date: 2026-08-17
+generated_at: 2026-08-17T05:47:01+09:30
 fastmail_status: skipped
-fastmail_note: "No Fastmail MCP tools loaded after two search attempts (\"fastmail\", \"email inbox\") — connector not available this run."
+fastmail_note: "No Fastmail MCP tools loaded after searching \"fastmail\" and \"email inbox\" — connector likely disconnected this run."
 ha_status: ok
 sections:
-  - id: weekly-update
-    title: Weekly Update
-    icon: "🏢"
   - id: tax-statements
     title: Tax Statements
     icon: "🧾"
@@ -15,14 +12,6 @@ sections:
     title: Battery Status
     icon: "🔋"
 ---
-
-## Weekly Update
-
-### Steam Machine Availability Check
-
-*2026-08-16*
-
-The weekly Steam Machine (AU store) checker script failed with a network error (`Tunnel connection failed: 403 Forbidden`) when calling Steam's store API — the sandbox's network allowlist appears to be blocking it. No availability or pricing data could be retrieved this week. Last known status: no prior data on record. The check will retry next week.
 
 ## Tax Statements
 
@@ -33,6 +22,6 @@ Fastmail unavailable this run — tax statements not checked.
 ## Battery Status
 
 ### Battery Levels
-*2026 August 16 Sunday 05:47*
+*2026 August 17 Monday 05:47*
 
-- Battery Level: 74%
+- Battery Level: 82%

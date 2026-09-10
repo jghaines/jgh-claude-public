@@ -1,8 +1,8 @@
 ---
-date: 2026-09-10
-generated_at: 2026-09-10T07:48:46+09:30
+date: 2026-09-11
+generated_at: 2026-09-11T07:48:44+09:30
 fastmail_status: skipped
-fastmail_note: "No Fastmail MCP tools loaded (ToolSearch queries 'fastmail' and 'email inbox' both returned no Fastmail tools) — connector not available this run."
+fastmail_note: "No Fastmail MCP tools loaded (ToolSearch returned nothing for 'fastmail' or 'email inbox') — connector not available this run."
 ha_status: unreachable
 sections:
   - id: battery
@@ -13,6 +13,6 @@ sections:
 ## Battery Status
 
 ### Battery Levels
-*2026 September 10 Thursday 07:48*
+*2026 September 11 Friday 07:48*
 
-Home Assistant was unreachable this run. All three attempts to read the `Battery Level` sensor were automatically declined because the scheduled run had no one present to approve the connector permission prompt. No battery reading is available for today.
+Home Assistant unreachable — the `GetLiveContext` call for "Battery Level" was automatically declined on all three attempts because no one was available to approve the connector permission prompt during this scheduled run. No battery reading available today.
